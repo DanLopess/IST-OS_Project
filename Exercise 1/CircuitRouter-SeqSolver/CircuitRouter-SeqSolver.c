@@ -149,7 +149,8 @@ static char* parseArgs (long argc, char* const argv[]){
 
     if (opterr) {
         displayUsage(argv[0]);
-    }else{
+    }
+		else {
 			return(argv[fileNameIndex]); //returns first and only non-option argument (filename)
 		}
 

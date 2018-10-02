@@ -164,6 +164,20 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr);
 void grid_print (grid_t* gridPtr);
 
 
+/* =============================================================================
+ * grid_print_file TODO finish up
+ * =============================================================================
+ */
+void grid_print_file (grid_t* gridPtr)<
+
+
+/* =============================================================================
+ * grid_file_manage
+ * =============================================================================
+ */
+FILE* grid_manage_file(char* fname)<
+
+
 #endif /* GRID_H */
 
 

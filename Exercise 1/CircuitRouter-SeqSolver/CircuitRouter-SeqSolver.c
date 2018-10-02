@@ -54,6 +54,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "lib/list.h"
 #include "maze.h"

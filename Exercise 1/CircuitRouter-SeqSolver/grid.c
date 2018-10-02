@@ -250,7 +250,7 @@ void grid_print (grid_t* gridPtr){
 }
 
 /* =============================================================================
- * grid_print_file
+ * grid_print_file TODO needs proper calling
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPtr, char* fname) {

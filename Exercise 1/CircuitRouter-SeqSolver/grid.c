@@ -220,13 +220,13 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 
     for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-        *gridPointPtr = GRID_POINT_FULL; 
+        *gridPointPtr = GRID_POINT_FULL;
     }
 }
 
 
 /* =============================================================================
- * grid_print
+ * grid_print TODO del this
  * =============================================================================
  */
 void grid_print (grid_t* gridPtr){
@@ -247,6 +247,54 @@ void grid_print (grid_t* gridPtr){
         }
         puts("");
     }
+}
+
+/* =============================================================================
+ * grid_print_file
+ * =============================================================================
+ */
+void grid_print_file (grid_t* gridPtr, char* fname) {
+    long width  = gridPtr->width;
+    long height = gridPtr->height;
+    long depth  = gridPtr->depth;
+    long z;
+
+	fRes = grid_file_manage(fname);
+
+    for (z = 0; z < depth; z++) {
+        printf("[z = %li]\n", z);
+        long x;
+        for (x = 0; x < width; x++) {
+            long y;
+            for (y = 0; y < height; y++) {
+                fprintf(fRes, "%4li", *grid_getPointRef(gridPtr, x, y, z));
+            }
+            fputs("", fRes);
+        }
+        fputs("", fRes);
+    }
+}
+
+/* =============================================================================
+ * grid_file_manage
+ * =============================================================================
+ */
+FILE* grid_manage_file(char* fname) {
+	char ch;
+	FILE* fRes = fopen(strcat(fname, ".res"), "r+");
+
+	if (fRes) {
+		fResOld = fopen(strcat(fname, ".old"), "w");
+		while( ( ch = fgetc(fRes) ) != EOF )
+   			fputc(ch, fResOld);
+
+		fRes = fclose();
+		fRes =
+		return (fRes)
+	}
+	else {
+		return (fopen(strcat(fname, ".res"), "w");
+	}
 }
 
 

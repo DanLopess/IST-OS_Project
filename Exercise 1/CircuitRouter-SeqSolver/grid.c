@@ -252,7 +252,7 @@ void grid_print (grid_t* gridPtr){
 /* =============================================================================
  * grid_print_file TODO needs proper calling
  * =============================================================================
- */ //test
+ */
 void grid_print_file (grid_t* gridPtr, char* fname) {
     long width  = gridPtr->width;
     long height = gridPtr->height;

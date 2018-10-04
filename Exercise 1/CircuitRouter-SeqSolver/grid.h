@@ -168,14 +168,14 @@ void grid_print (grid_t* gridPtr);
  * grid_print_file TODO finish up
  * =============================================================================
  */
-void grid_print_file (grid_t* gridPtr);
+void grid_print_file (grid_t* gridPtr, char* fname);
 
 
 /* =============================================================================
  * grid_file_manage
  * =============================================================================
  */
-FILE* grid_manage_file(char* fname);
+void grid_manage_file(char* fname);
 
 
 #endif /* GRID_H */

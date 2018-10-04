@@ -259,7 +259,8 @@ void grid_print_file (grid_t* gridPtr, char* fname) {
     long depth  = gridPtr->depth;
     long z;
 
-	fRes = grid_file_manage(fname);
+	grid_manage_file(fname);
+	FILE *fRes = (fopen(strcat(fname, ".res"), "w"));
 
     for (z = 0; z < depth; z++) {
         printf("[z = %li]\n", z);
@@ -273,27 +274,28 @@ void grid_print_file (grid_t* gridPtr, char* fname) {
         }
         fputs("", fRes);
     }
+	return;
 }
 
 /* =============================================================================
  * grid_file_manage
  * =============================================================================
  */
-FILE* grid_manage_file(char* fname) {
+void grid_manage_file (char* fname) {
 	char ch;
 	FILE* fRes = fopen(strcat(fname, ".res"), "r+");
 
 	if (fRes) {
-		fResOld = fopen(strcat(fname, ".old"), "w");
+		FILE *fResOld = fopen(strcat(fname, ".old"), "w");
 		while( ( ch = fgetc(fRes) ) != EOF )
    			fputc(ch, fResOld);
 
-		fRes = fclose();
-		fRes =
-		return (fRes)
+		fclose(fRes);
+		fclose(fResOld);
+		return;
 	}
 	else {
-		return (fopen(strcat(fname, ".res"), "w");
+		return;
 	}
 }
 

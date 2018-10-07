@@ -363,7 +363,9 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPri
 
     if (doPrintPaths) {
         puts("\nRouted Maze:");
-        grid_print(testGridPtr);
+		char* fname = "print.txt"; /*TODO replace this with actual variable*/
+        grid_print_file(testGridPtr, fname);
+		/*TODO this is where print is changed and called */
     }
 
     grid_free(testGridPtr);

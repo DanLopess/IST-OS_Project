@@ -115,7 +115,7 @@ static void setDefaultParams (){
  * =============================================================================
  */
 static char* parseArgs (long argc, char* const argv[]){
-    long i, fileNameIndex;
+    long i;
     long opt;
 
     opterr = 0;
@@ -130,9 +130,6 @@ static char* parseArgs (long argc, char* const argv[]){
             case 'z':
                 global_params[(unsigned char)opt] = atol(optarg);
                 break;
-            // case 'p':
-            //     global_doPrint = TRUE;
-            //     break;
             case '?':
             case 'h':
             default:
@@ -141,17 +138,17 @@ static char* parseArgs (long argc, char* const argv[]){
         }
     }
 
-    for (i = optind; i < argc; i++) {
-				
+    for (i = optind+1; i < argc; i++) {
         fprintf(stderr, "Non-option argument: %s\n", argv[i]);
         opterr++;
     }
 
     if (opterr) {
         displayUsage(argv[0]);
+				return 0;
     }
 		else {
-			return(argv[fileNameIndex]); //returns first and only non-option argument (filename)
+			return(argv[optind]); //returns first and only non-option argument (filename)
 		}
 
 }
@@ -165,15 +162,15 @@ int main(int argc, char** argv){
     /*
      * Initialization
      */
-    char *fileName = parseArgs(argc, (char** const)argv);
-
+    char *fileName = parseArgs(argc, argv);
 		FILE* fpointer;
+
     if ((fpointer = fopen(fileName, "r")) == NULL){
         printf("Error! opening file");
         // Program exits if file pointer returns NULL.
         exit(1);
     }
-		printf("file opened!");
+
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
@@ -203,6 +200,7 @@ int main(int argc, char** argv){
         numPathRouted += vector_getSize(pathVectorPtr);
 	}
 		// TODO print this on the file
+
     printf("Paths routed    = %li\n", numPathRouted);
     printf("Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
 

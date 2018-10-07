@@ -166,15 +166,12 @@ long maze_read (maze_t* mazePtr, FILE* fpointer){
     vector_t* dstVectorPtr = mazePtr->dstVectorPtr;
 
     while (fgets(line, sizeof(line), fpointer)) {
-
+				printf("%s", line);
         char code;
         long x1, y1, z1;
         long x2, y2, z2;
-        long numToken = sscanf(line, " %c %li %li %li %li %li %li",
+				long numToken = sscanf(line, " %c %li %li %li %li %li %li",
                                &code, &x1, &y1, &z1, &x2, &y2, &z2);
-
-				fclose(fpointer); // closes the file, all lines have been read
-
         lineNumber++;
 
         if (numToken < 1) {
@@ -234,7 +231,7 @@ long maze_read (maze_t* mazePtr, FILE* fpointer){
         }
 
     } /* iterate over lines in input file */
-
+		fclose(fpointer); // closes the file, all lines have been read
 
     /*
      * Initialize grid contents

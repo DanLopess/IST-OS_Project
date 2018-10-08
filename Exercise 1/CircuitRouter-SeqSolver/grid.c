@@ -257,7 +257,7 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
 void grid_print_file (grid_t* gridPtr) {
 	char* fNameRes = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+4));
 	strcpy(fNameRes, global_inputFile);
-	strcat(fNameRes,".res");
+	strcat(fNameRes,".res");.
 
 
 	grid_manage_file(fNameRes);

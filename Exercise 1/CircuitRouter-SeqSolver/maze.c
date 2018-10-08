@@ -358,9 +358,7 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPri
 
     if (doPrintPaths) {
         //puts("\nRouted Maze:");
-
-
-			grid_print_file(testGridPtr, auxFileName);
+			grid_print_file(testGridPtr);
     }
 
     grid_free(testGridPtr);

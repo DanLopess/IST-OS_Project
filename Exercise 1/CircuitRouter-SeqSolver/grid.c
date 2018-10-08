@@ -226,7 +226,7 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 
 
 /* =============================================================================
- * grid_print TODO del this
+ * grid_print
  * =============================================================================
  */
 void grid_print (grid_t* gridPtr, FILE *fRes){
@@ -235,8 +235,9 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
     long depth  = gridPtr->depth;
     long z;
 
+		fprintf(fRes, "Routed Maze:\n");
 		for (z = 0; z < depth; z++) {
-        printf("[z = %li]\n", z);
+        fprintf(fRes,"[z = %li]\n", z);
         long x;
         for (x = 0; x < width; x++) {
             long y;
@@ -254,14 +255,20 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPtr, char* fname) {
-    long width  = gridPtr->width;
-    long height = gridPtr->height;
-    long depth  = gridPtr->depth;
-    long z;
+			printf("entered grid print file\n");
 
+		// char* newName = (char*)malloc(sizeof(char) * strlen(fname) + 10);
+		// strcat(fname,".res");
+
+		FILE *fRes = fopen(fname, "w");
+		if (fRes) {
+			grid_print (gridPtr, fRes);
+		}
+		else {
+			printf("Error! Unable to open file!\n");
+		}
 		grid_manage_file(fname);
-		FILE *fRes = (fopen(strcat(fname, ".res"), "w"));
-		grid_print (grid_t* gridPtr, FILE *fRes);
+
 
 }
 

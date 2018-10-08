@@ -251,18 +251,19 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
 }
 
 /* =============================================================================
- * grid_print_file 		//TODO free all allocated memory
+ * grid_print_file
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPtr) {
-	char* fname = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
-	strcpy(fname, global_inputFile);
+	char* fNameRes = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+4));
+	strcpy(fNameRes, global_inputFile);
+	strcat(fNameRes,".res");
 
-	strcat(fname,".res");
-	printf("fname: %s\n" ,fname);
 
-	FILE *fRes = fopen(fname, "w");
-	printf("%p\n", fRes);
+	grid_manage_file(fNameRes);
+	FILE *fRes = fopen(fNameRes, "w");
+
+
 	if (fRes) {
 		grid_print (gridPtr, fRes);
 	}
@@ -270,8 +271,8 @@ void grid_print_file (grid_t* gridPtr) {
 		printf("Error! Unable to open file!\n");
 	}
 
-	grid_manage_file(fname);
-	free(fname);
+	free(fNameRes);
+	fclose(fRes);
 	return;
 }
 
@@ -279,31 +280,36 @@ void grid_print_file (grid_t* gridPtr) {
  * grid_file_manage
  * =============================================================================
  */
-void grid_manage_file () {
+void grid_manage_file (char* fNameRes) {
 	char ch;
-
-	char* fNameResOld = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 8));
-	strcpy(fNameResOld, global_inputFile);
-	strcat(fNameResOld, ".res.old");
-	char* fNameRes = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 4));
-	strcpy(fNameRes, global_inputFile);
-	strcat(fNameResOld, ".res");
-
+	char* fNameResOld;
 	FILE* fRes = fopen(fNameRes, "r+");
 
-	if (fRes) {
-		if (fRes)
-		FILE *fResOld = fopen(strcat(fResOld, ".old"), "w");
-		while( ( ch = fgetc(fRes) ) != EOF )
-   			fputc(ch, fResOld);
 
-		fclose(fRes);
-		fclose(fResOld);
+	if (fRes) {
+		fseek(fRes, 0, SEEK_END);
+		if (ftell(fRes) != 0) {
+
+			fseek(fRes, 0, SEEK_SET);
+
+			fNameResOld = (char*) malloc(sizeof(char)*(strlen(fNameRes)+ 4));
+			strcpy(fNameResOld, fNameRes);
+			strcat(fNameResOld, ".old");
+			FILE *fResOld = fopen(fNameResOld, "w");
+
+			while (( ch = fgetc(fRes)) != EOF )
+	   			fputc(ch, fResOld);
+
+			fclose(fResOld);
+			free(fNameResOld);
+		}
 	}
+
 	else {
 		printf("Error! Unable to open file!\n");
 	}
-	free(fNameResOld);
+
+	fclose(fRes);
 	return;
 }
 

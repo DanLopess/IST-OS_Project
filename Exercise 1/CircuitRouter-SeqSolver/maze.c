@@ -62,9 +62,7 @@
 #include "lib/pair.h"
 #include "lib/types.h"
 #include "lib/vector.h"
-#include <string.h>
 
-extern char* global_inputFile; //in CircuitRouter-SeqSolver
 
 /* =============================================================================
  * maze_alloc
@@ -360,9 +358,8 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPri
 
     if (doPrintPaths) {
         //puts("\nRouted Maze:");
-				
-			char* auxFileName = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
-			strcpy(auxFileName, global_inputFile);
+
+
 			grid_print_file(testGridPtr, auxFileName);
     }
 

@@ -62,7 +62,7 @@
 
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
-
+extern char* global_inputFile; //in CircuitRouter-SeqSolver
 
 /* =============================================================================
  * grid_alloc
@@ -251,11 +251,12 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
 }
 
 /* =============================================================================
- * grid_print_file TODO needs proper calling
+ * grid_print_file
  * =============================================================================
  */
-void grid_print_file (grid_t* gridPtr, char* fname) {
-			printf("\nfile name: %s\n", fname);
+void grid_print_file (grid_t* gridPt) {
+		char* auxFileName = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
+		strcpy(auxFileName, global_inputFile);
 
 		strcat(fname,".res");
 		printf("fname: %s\n" ,fname);

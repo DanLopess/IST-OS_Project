@@ -254,23 +254,25 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
  * grid_print_file 		//TODO free all allocated memory
  * =============================================================================
  */
-void grid_print_file (grid_t* gridPtr) {
-		char* fname = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
+void grid_print_file (grid_t* gridPt) {
+	char* auxFileName = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
+	strcpy(auxFileName, global_inputFile);
 
-		strcpy(fname, global_inputFile);
-		strcat(fname,".res");
-		printf("fname: %s\n" ,fname);
+	strcat(fname,".res");
+	printf("fname: %s\n" ,fname);
 
-		FILE *fRes = fopen(fname, "w");
-		printf("%p\n", fRes);
-		if (fRes) {
-			grid_print (gridPtr, fRes);
-		}
-		else {
-			printf("Error! Unable to open file!\n");
-		}
-		grid_manage_file(fname);
+	FILE *fRes = fopen(fname, "w");
+	printf("%p\n", fRes);
+	if (fRes) {
+		grid_print (gridPtr, fRes);
+	}
+	else {
+		printf("Error! Unable to open file!\n");
+	}
 
+	grid_manage_file(fname);
+	free(fNameRes);
+	return;
 }
 
 /* =============================================================================
@@ -278,10 +280,16 @@ void grid_print_file (grid_t* gridPtr) {
  * =============================================================================
  */
 void grid_manage_file () {
-	char* fResOld = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 8));
-	strcpy(fResOld, fname);
 	char ch;
-	FILE* fRes = fopen(fname, "r+");
+
+	char* fNameResOld = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 8));
+	strcpy(fNameResOld, global_inputFile);
+	strcat(fNameResOld, ".res.old");
+	char* fNameRes = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 4));
+	strcpy(fNameRes, global_inputFile);
+	strcat(fNameResOld, ".res");
+
+	FILE* fRes = fopen(fNameRes, "r+");
 
 	if (fRes) {
 		if (fRes)
@@ -295,6 +303,8 @@ void grid_manage_file () {
 	else {
 		printf("Error! Unable to open file!\n");
 	}
+	free(fNameResOld);
+	return;
 }
 
 

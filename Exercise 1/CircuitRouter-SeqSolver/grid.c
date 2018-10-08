@@ -277,12 +277,15 @@ void grid_print_file (grid_t* gridPtr, char* fname) {
  * grid_file_manage
  * =============================================================================
  */
-void grid_manage_file (char* fname) {
+void grid_manage_file () {
+	char* fResOld = (char*) malloc(sizeof(char)*(strlen(global_inputFile)+ 8));
+	strcpy(fResOld, fname);
 	char ch;
-	FILE* fRes = fopen(strcat(fname, ".res"), "r+");
+	FILE* fRes = fopen(fname, "r+");
 
 	if (fRes) {
-		FILE *fResOld = fopen(strcat(fname, ".old"), "w");
+		if (fRes)
+		FILE *fResOld = fopen(strcat(fResOld, ".old"), "w");
 		while( ( ch = fgetc(fRes) ) != EOF )
    			fputc(ch, fResOld);
 

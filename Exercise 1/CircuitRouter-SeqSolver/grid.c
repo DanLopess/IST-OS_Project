@@ -266,13 +266,13 @@ void grid_print_file (grid_t* gridPtr) {
 
 	if (fRes) {
 		grid_print (gridPtr, fRes);
+		fclose(fRes);
 	}
 	else {
 		printf("Error! Unable to open file!\n");
 	}
 
 	free(fNameRes);
-	fclose(fRes);
 	return;
 }
 

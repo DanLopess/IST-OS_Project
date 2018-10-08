@@ -229,23 +229,23 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
  * grid_print TODO del this
  * =============================================================================
  */
-void grid_print (grid_t* gridPtr){
+void grid_print (grid_t* gridPtr, FILE *fRes){
     long width  = gridPtr->width;
     long height = gridPtr->height;
     long depth  = gridPtr->depth;
     long z;
 
-    for (z = 0; z < depth; z++) {
+		for (z = 0; z < depth; z++) {
         printf("[z = %li]\n", z);
         long x;
         for (x = 0; x < width; x++) {
             long y;
             for (y = 0; y < height; y++) {
-                printf("%4li", *grid_getPointRef(gridPtr, x, y, z));
+                fprintf(fRes, "%4li", *grid_getPointRef(gridPtr, x, y, z));
             }
-            puts("");
+            fputs("", fRes);
         }
-        puts("");
+        fputs("", fRes);
     }
 }
 
@@ -259,22 +259,10 @@ void grid_print_file (grid_t* gridPtr, char* fname) {
     long depth  = gridPtr->depth;
     long z;
 
-	grid_manage_file(fname);
-	FILE *fRes = (fopen(strcat(fname, ".res"), "w"));
+		grid_manage_file(fname);
+		FILE *fRes = (fopen(strcat(fname, ".res"), "w"));
+		grid_print (grid_t* gridPtr, FILE *fRes);
 
-    for (z = 0; z < depth; z++) {
-        printf("[z = %li]\n", z);
-        long x;
-        for (x = 0; x < width; x++) {
-            long y;
-            for (y = 0; y < height; y++) {
-                fprintf(fRes, "%4li", *grid_getPointRef(gridPtr, x, y, z));
-            }
-            fputs("", fRes);
-        }
-        fputs("", fRes);
-    }
-	return;
 }
 
 /* =============================================================================
@@ -292,10 +280,9 @@ void grid_manage_file (char* fname) {
 
 		fclose(fRes);
 		fclose(fResOld);
-		return;
 	}
 	else {
-		return;
+		printf("Error! Unable to open file!\n");
 	}
 }
 

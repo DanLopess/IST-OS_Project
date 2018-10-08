@@ -166,7 +166,6 @@ long maze_read (maze_t* mazePtr, FILE* fpointer){
     vector_t* dstVectorPtr = mazePtr->dstVectorPtr;
 
     while (fgets(line, sizeof(line), fpointer)) {
-				printf("%s", line);
         char code;
         long x1, y1, z1;
         long x2, y2, z2;
@@ -229,7 +228,6 @@ long maze_read (maze_t* mazePtr, FILE* fpointer){
                 exit(1);
             }
         }
-
     } /* iterate over lines in input file */
 		fclose(fpointer); // closes the file, all lines have been read
 

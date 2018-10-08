@@ -114,7 +114,7 @@ static void setDefaultParams (){
  * parseArgs
  * =============================================================================
  */
-static char* parseArgs (long argc, char* const argv[]){
+static void parseArgs (long argc, char* const argv[]){
     long i;
     long opt;
 
@@ -145,10 +145,10 @@ static char* parseArgs (long argc, char* const argv[]){
 
     if (opterr) {
         displayUsage(argv[0]);
-				return 0;
     }
 		else {
-			return(argv[optind]); //returns first and only non-option argument (filename)
+			global_inputFile = argv[optind];
+			//reads first and only non-option argument (filename)
 		}
 
 }
@@ -162,10 +162,10 @@ int main(int argc, char** argv){
     /*
      * Initialization
      */
-    char *fileName = parseArgs(argc, argv);
+    parseArgs(argc, argv);
 		FILE* fpointer;
 
-    if ((fpointer = fopen(fileName, "r")) == NULL){
+    if ((fpointer = fopen(global_inputFile, "r")) == NULL){
         printf("Error! opening file");
         // Program exits if file pointer returns NULL.
         exit(1);
@@ -174,7 +174,7 @@ int main(int argc, char** argv){
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
-    long numPathToRoute = maze_read(mazePtr,fpointer); //TODO add argument that contains file pointer
+    long numPathToRoute = maze_read(mazePtr,fpointer);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],

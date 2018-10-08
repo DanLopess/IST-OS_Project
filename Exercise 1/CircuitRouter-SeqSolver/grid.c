@@ -255,12 +255,13 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPtr, char* fname) {
-			printf("entered grid print file\n, file name: %s", fname);
+			printf("\nfile name: %s\n", fname);
 
-		fname = (char*)realloc(fname, strlen(fname) + 10);
 		strcat(fname,".res");
+		printf("fname: %s\n" ,fname);
 
 		FILE *fRes = fopen(fname, "w");
+		printf("%p\n", fRes);
 		if (fRes) {
 			grid_print (gridPtr, fRes);
 		}

@@ -235,9 +235,9 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
     long depth  = gridPtr->depth;
     long z;
 
-		fprintf(fRes, "Routed Maze:\n");
+		fprintf(fRes, "Routed Maze:");
 		for (z = 0; z < depth; z++) {
-        fprintf(fRes,"[z = %li]\n", z);
+        fprintf(fRes,"\n[z = %li]\n", z);
         long x;
         for (x = 0; x < width; x++) {
             long y;
@@ -255,10 +255,10 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPtr, char* fname) {
-			printf("entered grid print file\n");
+			printf("entered grid print file\n, file name: %s", fname);
 
-		// char* newName = (char*)malloc(sizeof(char) * strlen(fname) + 10);
-		// strcat(fname,".res");
+		fname = (char*)realloc(fname, strlen(fname) + 10);
+		strcat(fname,".res");
 
 		FILE *fRes = fopen(fname, "w");
 		if (fRes) {

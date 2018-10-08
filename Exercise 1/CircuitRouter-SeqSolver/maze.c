@@ -63,6 +63,7 @@
 #include "lib/types.h"
 #include "lib/vector.h"
 
+extern char* global_inputFile; //in CircuitRouter-SeqSolver
 
 /* =============================================================================
  * maze_alloc
@@ -358,8 +359,7 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPri
 
     if (doPrintPaths) {
         //puts("\nRouted Maze:");
-		char* fname = "print.txt"; /*TODO replace this with actual variable*/
-    grid_print_file(testGridPtr, fname);
+    	grid_print_file(testGridPtr, global_inputFile);
 		/*TODO this is where print is changed and called */
     }
 

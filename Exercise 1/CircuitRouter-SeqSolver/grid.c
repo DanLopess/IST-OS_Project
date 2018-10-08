@@ -255,8 +255,8 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
  * =============================================================================
  */
 void grid_print_file (grid_t* gridPt) {
-	char* auxFileName = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
-	strcpy(auxFileName, global_inputFile);
+	char* fname = (char*)malloc(sizeof(char*)*(strlen(global_inputFile)+6));
+	strcpy(fname, global_inputFile);
 
 	strcat(fname,".res");
 	printf("fname: %s\n" ,fname);

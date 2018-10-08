@@ -198,6 +198,7 @@ int main(int argc, char** argv){
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
         numPathRouted += vector_getSize(pathVectorPtr);
 	}
+
 		// TODO print this on the file
 
     printf("Paths routed    = %li\n", numPathRouted);

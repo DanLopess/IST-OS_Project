@@ -147,7 +147,7 @@ static void parseArgs (long argc, char* const argv[]){
     }
 		else {
 			global_inputFile = argv[optind];
-			//reads first and only non-option argument (filename)
+			/*reads first and only non-option argument (filename)*/
 		}
 
 }
@@ -162,18 +162,32 @@ int main(int argc, char** argv){
      * Initialization
      */
     parseArgs(argc, argv);
-		FILE* fpointer;
+		char* fNameRes = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+4));
+		strcpy(fNameRes, global_inputFile);
+		strcat(fNameRes,".res");
+		char* fNameResOld = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+8));
+		strcpy(fNameResOld, fNameRes);
+		strcat(fNameResOld,".old");
 
-    if ((fpointer = fopen(global_inputFile, "r")) == NULL){
+		FILE* inputFile;
+		FILE* outputFile;
+
+    if ((inputFile = fopen(global_inputFile, "r")) == NULL){
         printf("Error! opening file");
-        // Program exits if file pointer returns NULL.
+        /* Program exits if file pointer returns NULL. */
         exit(1);
     }
+
+		if((outputFile = fopen(fNameRes, "r"))!=NULL){
+			rename(fNameRes,fNameResOld);
+			fclose(outputFile);
+		}
+		outputFile = fopen(fNameRes, "w");
 
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
-    long numPathToRoute = maze_read(mazePtr,fpointer);
+    long numPathToRoute = maze_read(mazePtr,inputFile, outputFile);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -199,19 +213,18 @@ int main(int argc, char** argv){
         numPathRouted += vector_getSize(pathVectorPtr);
 	}
 
-		// TODO print this on the file
-
-    printf("Paths routed    = %li\n", numPathRouted);
-    printf("Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
-
+    fprintf(outputFile, "Paths routed    = %li\n", numPathRouted);
+    fprintf(outputFile, "Elapsed time    = %f seconds\n",
+						TIMER_DIFF_SECONDS(startTime, stopTime));
 
     /*
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
-    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, global_doPrint);
+    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, global_doPrint,
+																		outputFile);
     assert(status == TRUE);
-    puts("Verification passed."); // TODO print on file
+    fprintf(outputFile, "\nVerification passed.");
 
     maze_free(mazePtr);
     router_free(routerPtr);
@@ -221,13 +234,16 @@ int main(int argc, char** argv){
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
         vector_t* v;
         while((v = vector_popBack(pathVectorPtr))) {
-            // v stores pointers to longs stored elsewhere; no need to free them here
+            /* v stores pointers to longs stored elsewhere; no need to free them here */
             vector_free(v);
         }
         vector_free(pathVectorPtr);
     }
     list_free(pathVectorListPtr);
-
+		free(fNameRes);
+		free(fNameResOld);
+		fclose(inputFile);
+		fclose(outputFile);
 
     exit(0);
 }

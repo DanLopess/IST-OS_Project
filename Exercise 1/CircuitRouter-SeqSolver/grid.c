@@ -259,20 +259,20 @@ void grid_print_file (grid_t* gridPtr) {
 	strcpy(fNameRes, global_inputFile);
 	strcat(fNameRes,".res");
 
-
 	grid_manage_file(fNameRes);
 	FILE *fRes = fopen(fNameRes, "w");
 
-
 	if (fRes) {
 		grid_print (gridPtr, fRes);
-		fclose(fRes);
 	}
 	else {
 		printf("Error! Unable to open file!\n");
+		/*free(fNameRes);*/
+		exit(1);
 	}
-
-	free(fNameRes);
+	
+	/*free(fNameRes);
+	*/fclose(fRes);
 	return;
 }
 
@@ -301,12 +301,13 @@ void grid_manage_file (char* fNameRes) {
 	   			fputc(ch, fResOld);
 
 			fclose(fResOld);
-			free(fNameResOld);
+			/*free(fNameResOld);*/
 		}
 	}
 
 	else {
 		printf("Error! Unable to open file!\n");
+		exit(1);
 	}
 
 	fclose(fRes);

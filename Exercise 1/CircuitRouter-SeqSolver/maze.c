@@ -357,14 +357,7 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr,
     } /* iterate over pathVectorList */
 
     if (doPrintPaths) {
-<<<<<<< Updated upstream
-        //puts("\nRouted Maze:");
-
-
-			grid_print_file(testGridPtr, auxFileName);
-=======
 			grid_print(testGridPtr, outputFile); /* Prints grid to file */
->>>>>>> Stashed changes
     }
     grid_free(testGridPtr);
 

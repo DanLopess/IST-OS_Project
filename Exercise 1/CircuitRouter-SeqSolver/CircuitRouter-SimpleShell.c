@@ -10,19 +10,10 @@ int main(int argc, char** argv){
 	/*
 	 * Initialization
 	 */
-
-<<<<<<< Updated upstream
 	 int maxChildren, pid;
 	 int currentChildren = 0;
 	 int exit = 0;
 	 char command[201]; /*large size to acomodate large file names*/
-=======
-	/* Main functionality */
-	if(argc == 0 || argc == 1){ /*No more than 1 argument allowed*/
-		if(argc == 1){
-			int MAXCHILDREN = argv[0];
-		}
->>>>>>> Stashed changes
 
 	/* Main functionality */
 	if (argc == 0 || argc == 1) { /*No more than 1 argument allowed*/

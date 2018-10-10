@@ -4,10 +4,17 @@ CircuitRouter-SimpleShell
 Developed by Daniel Lopes & Nuno Ramos, IST
  =============================================================================*/
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-void runSeqSolver(){
-	// TODO this function when called, runs seqsolver with a given
-	// input file
+void runSeqSolver() {
+	char command[256];
+	scanf("%s", command);
+	execl("CircuitRouterseq-solver", command);
+
+	return;
 }
 
 void parseCommand(int maxChildren){
@@ -15,21 +22,19 @@ void parseCommand(int maxChildren){
 	int currentChildren = 0;
 	char command[256]; /*large size to acomodate large file names*/
 
-	while() {
+	while (1) {
 		scanf("%s", command);
 
 		if (!strcmp(command, "exit")) {
-			exit(1);
+			exit(0);
 		}
 		else if (!strcmp(command, "run")) {
 			scanf("%s", command);
 
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				pid = fork();
-				if (pid != 0) {
-					scanf("%s", command);
-					int execl("CircuitRouterseq-solver", command);
-					/*TODO part that runs code*/
+				if (pid == 0) {
+					runSeqSolver();
 				}
 			}
 			else { /*too many children to create another */
@@ -53,15 +58,17 @@ int main(int argc, char** argv){
 	 * Initialization
 	 */
 
+	 int maxChildren;
+
 	/* Main functionality */
 	if (argc == 0 || argc == 1) { /*No more than 1 argument allowed*/
-		int maxChildren;
 		if (argc == 0)
 			maxChildren = -1; /* unlimited children */
 		else
-			maxChildren = argv[0];
+			maxChildren = atoi(argv[0]);
 		parseCommand(maxChildren);
 	}
+
 	else{
 		printf("Error! Too many arguments.");
 		exit(1);

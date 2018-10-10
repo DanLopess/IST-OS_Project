@@ -1,7 +1,7 @@
 # Makefile, versao 1
 # Sistemas Operativos, DEI/IST/ULisboa 2018-19
 
-SOURCES = router.c maze.c grid.c coordinate.c CircuitRouter-SeqSolver.c
+SOURCES =CircuitRouter-SimpleShell.c  router.c maze.c grid.c coordinate.c CircuitRouter-SeqSolver.c
 SOURCES+= ../lib/vector.c ../lib/queue.c ../lib/list.c ../lib/pair.c
 OBJS = $(SOURCES:%.c=%.o)
 CC   = gcc
@@ -12,8 +12,9 @@ TARGET = CircuitRouter-SeqSolver
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
+	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS)
 
+CircuitRouter-SimpleShell.o: CircuitRouter-SimpleShell.c CircuitRouter-SeqSolver.c
 CircuitRouter-SeqSolver.o: CircuitRouter-SeqSolver.c maze.h router.h ../lib/list.h ../lib/timer.h ../lib/types.h
 router.o: router.c router.h coordinate.h grid.h ../lib/queue.h ../lib/vector.h
 maze.o: maze.c maze.h coordinate.h grid.h ../lib/list.h ../lib/queue.h ../lib/pair.h ../lib/types.h ../lib/vector.h
@@ -30,5 +31,3 @@ $(OBJS):
 clean:
 	@echo Cleaning...
 	rm -f $(OBJS) $(TARGET)
-
-

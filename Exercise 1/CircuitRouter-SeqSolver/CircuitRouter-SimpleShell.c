@@ -40,6 +40,8 @@ int main(int argc, char** argv){
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				pid = fork();
 				if (pid != 0) {
+					scanf("%s", command);
+					int execl("CircuitRouterseq-solver", command);
 					/*TODO part that runs code*/
 				}
 			}

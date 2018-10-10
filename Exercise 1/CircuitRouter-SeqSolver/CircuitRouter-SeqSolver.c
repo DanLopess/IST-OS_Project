@@ -162,12 +162,12 @@ int main(int argc, char** argv){
      * Initialization
      */
     parseArgs(argc, argv);
-		char* fNameRes = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+4));
+		char fNameRes[256];// = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+4));
 		strcpy(fNameRes, global_inputFile);
 		strcat(fNameRes,".res");
-		char* fNameResOld = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+8));
-		strcpy(fNameResOld, fNameRes);
-		strcat(fNameResOld,".old");
+		char fNameResOld[256]; //= (char*)malloc(sizeof(char) * (strlen(global_inputFile)+8));
+		strcpy(fNameResOld, global_inputFile);
+		strcat(fNameResOld,".res.old");
 
 		FILE* inputFile;
 		FILE* outputFile;
@@ -178,16 +178,17 @@ int main(int argc, char** argv){
         exit(1);
     }
 
-		if((outputFile = fopen(fNameRes, "r"))!=NULL){
-			rename(fNameRes,fNameResOld);
-			fclose(outputFile);
-		}
+		rename(fNameRes,fNameResOld); /* If a file called fNameRes
+		exists, changes name to fNameResOld */
 		outputFile = fopen(fNameRes, "w");
+
+		//TODO file created successfully but rename makes a backup-file (inaccessible)
 
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
     long numPathToRoute = maze_read(mazePtr,inputFile, outputFile);
+
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -240,8 +241,8 @@ int main(int argc, char** argv){
         vector_free(pathVectorPtr);
     }
     list_free(pathVectorListPtr);
-		free(fNameRes);
-		free(fNameResOld);
+		// free(fNameRes);
+		// free(fNameResOld);
 		fclose(inputFile);
 		fclose(outputFile);
 

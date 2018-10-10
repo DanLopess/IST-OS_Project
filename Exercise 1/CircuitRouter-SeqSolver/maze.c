@@ -244,9 +244,9 @@ long maze_read (maze_t* mazePtr, FILE* finput, FILE* foutput){
     addToGrid(gridPtr, srcVectorPtr,  "source");
     addToGrid(gridPtr, dstVectorPtr,  "destination");
 
+		//TODO when this is printed out, is when the file gets corrupted
     fprintf(foutput, "Maze dimensions = %li x %li x %li\n", width, height, depth);
     fprintf(foutput, "Paths to route  = %li\n", list_getSize(workListPtr));
-
     /*
      * Initialize work queue
      */

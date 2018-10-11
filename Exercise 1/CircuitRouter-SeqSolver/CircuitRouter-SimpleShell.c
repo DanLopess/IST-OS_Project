@@ -8,11 +8,16 @@ Developed by Daniel Lopes & Nuno Ramos, IST
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 void runSeqSolver() {
 	char fileName[256];
 	scanf("%s", fileName);
 	execl("./CircuitRouterseq-solver", fileName);
+	if (1)  /*Needs to check for success*/
+		printf("CHILD EXITED (PID=%d; return OK\n)", getpid());
+	else
+		printf("CHILD EXITED (PID=%d; return NOK\n)", getpid());
 	return;
 }
 
@@ -24,6 +29,7 @@ void parseCommand(int maxChildren){
 	while (scanf("%s", command)) {
 		if (!strcmp(command, "exit")) {
 			//TODO wait for all children and print all children PIDs + status
+			printf("END.\n");
 			exit(1);
 		}
 		else if (!strcmp(command, "run")) {
@@ -42,6 +48,7 @@ void parseCommand(int maxChildren){
 			}
 			else { /*too many children to create another */
 				wait(-1); /* Wait for any child to terminate (at least one)*/
+				currentChildren--;
 			}
 		}
 		else{

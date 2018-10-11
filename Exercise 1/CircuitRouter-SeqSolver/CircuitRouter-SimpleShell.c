@@ -14,6 +14,7 @@ void runSeqSolver() {
 	char fileName[256];
 	scanf("%s", fileName);
 	execl("", "CircuitRouterseq-solver", fileName, NULL);
+<<<<<<< Updated upstream
 }
 
 void create_child(int* childrenPIDs, int* index, int *currentChildren) {
@@ -27,6 +28,8 @@ void create_child(int* childrenPIDs, int* index, int *currentChildren) {
 		index++;
 		currentChildren++;
 	}
+=======
+>>>>>>> Stashed changes
 }
 
 void parseCommand(int maxChildren){

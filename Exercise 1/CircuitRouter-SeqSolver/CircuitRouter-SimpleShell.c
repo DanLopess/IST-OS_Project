@@ -31,9 +31,9 @@ void parseCommand(int maxChildren){
 			wait(-1);
 			for(int i = 0; i <= currentChildren; i++){
 				//if child i returned successfully
-				printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i])
+				printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
 				//if child i returned unsuccessfully
-				printf("CHILD EXITED (PID=%d; return NOK)\n", childrenPIDs[i])
+				printf("CHILD EXITED (PID=%d; return NOK)\n", childrenPIDs[i]);
 			}
 			//TODO wait for all children and print all children PIDs + status
 			printf("END.\n");

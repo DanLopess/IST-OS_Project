@@ -39,10 +39,10 @@ void parseCommand(int maxChildren){
 		else if (!strcmp(command, "run")) {
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				if (index == maxIndex) {
-					realloc(childrenPIDs, (sizeof(int)*index*2));/* Doubles size of array*/
+					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*index*2));/* Doubles size of array*/
 					maxIndex = maxIndex * 2;
 				}
-				childrenPIDs[currentChildren] = fork();
+				childrenPIDs[index] = fork();
 				if(childrenPIDs[index] == -1){
 					printf("Error! Can't fork.\n");
 					continue; /* Tries again */

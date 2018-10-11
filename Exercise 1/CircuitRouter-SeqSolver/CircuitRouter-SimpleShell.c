@@ -13,7 +13,20 @@ Developed by Daniel Lopes & Nuno Ramos, IST
 void runSeqSolver() {
 	char fileName[256];
 	scanf("%s", fileName);
-	execl("", "CircuitRouterseq-solver", fileName, NULL); 
+	execl("", "CircuitRouterseq-solver", fileName, NULL);
+}
+
+void create_child(int* childrenPIDs, int* index, int *currentChildren) {
+	childrenPIDs[*index] = fork();
+	if (childrenPIDs[*index] == -1){
+		printf("Error! Can't fork.\n");
+	}
+	if (childrenPIDs[*index] == 0) { /* Child Process */
+		runSeqSolver();
+	} else { /* Dad Process */
+		index++;
+		currentChildren++;
+	}
 }
 
 void parseCommand(int maxChildren){
@@ -21,12 +34,12 @@ void parseCommand(int maxChildren){
 	int index = 0; /* Index of last childrenPID inserted into array */
 	int maxIndex = maxChildren;
 	int currentChildren = 0; /* Control the number of children executing */
-	int status;
+	int status, i;
 	char command[256]; /*large size to acomodate large file names*/
 
 	while (scanf("%s", command)) {
 		if (!strcmp(command, "exit")) {
-			for (int i = 0; i <= index; i++){
+			for (i = 0; i <= index; i++){
 				if (waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
 				} else{
@@ -39,27 +52,19 @@ void parseCommand(int maxChildren){
 		else if (!strcmp(command, "run")) {
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				if (index == maxIndex) {
-					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*index*2));/* Doubles size of array*/
-					maxIndex = maxIndex * 2;
+					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*index + 10));/* Doubles size of array*/
+					maxIndex = maxIndex + 10;
 				}
-				childrenPIDs[index] = fork();
-				if(childrenPIDs[index] == -1){
-					printf("Error! Can't fork.\n");
-					continue; /* Tries again */
-				}
-				if (childrenPIDs[index] == 0) { /* Child Process */
-					runSeqSolver();
-				} else { /* Dad Process */
-					index++;
-					currentChildren++;
-					continue; /* Go back to begginning of while and reads another command*/
-				}
+				create_child(childrenPIDs, &index, &currentChildren);
 			}
+
 			else { /*too many children to create another */
 				waitpid(-1, &status, 0); /* Wait for any child to terminate (at least one)*/
 				currentChildren--;
+				create_child(childrenPIDs, &index, &currentChildren);
 			}
 		}
+
 		else{
 			printf("Invalid command!\n");
 		}

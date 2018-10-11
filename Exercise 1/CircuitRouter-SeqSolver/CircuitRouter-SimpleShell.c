@@ -13,7 +13,7 @@ Developed by Daniel Lopes & Nuno Ramos, IST
 void runSeqSolver() {
 	char fileName[256];
 	scanf("%s", fileName);
-	execl("./CircuitRouterseq-solver", fileName); //TODO solve this
+	execl("", "CircuitRouterseq-solver", fileName, NULL);
 }
 
 void parseCommand(int maxChildren){

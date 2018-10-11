@@ -19,14 +19,15 @@ void runSeqSolver() {
 void parseCommand(int maxChildren){
 	int *childrenPIDs = (int*) malloc(sizeof(int)*maxChildren);
 	int index = 0; /* Index of last childrenPID inserted into array */
+	int maxIndex = maxChildren;
 	int currentChildren = 0; /* Control the number of children executing */
 	int status;
 	char command[256]; /*large size to acomodate large file names*/
 
 	while (scanf("%s", command)) {
 		if (!strcmp(command, "exit")) {
-			for(int i = 0; i <= currentChildren; i++){
-				if(waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
+			for (int i = 0; i <= index; i++){
+				if (waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
 				} else{
 					printf("CHILD EXITED (PID=%d; return NOK)\n", childrenPIDs[i]);
@@ -36,16 +37,17 @@ void parseCommand(int maxChildren){
 			exit(0);
 		}
 		else if (!strcmp(command, "run")) {
-			if (maxChildren == -1 || currentChildren < maxChildren) { /* Current children */
-				if(index == maxChildren-1){
-					realloc(childrenPIDs, sizeof(int)*index*2);/* Doubles size of array*/
+			if (maxChildren == -1 || currentChildren < maxChildren) {
+				if (index == maxIndex) {
+					realloc(childrenPIDs, (sizeof(int)*index*2));/* Doubles size of array*/
+					maxIndex = maxIndex * 2;
 				}
 				childrenPIDs[currentChildren] = fork();
-				if(childrenPIDs[currentChildren] == -1){
+				if(childrenPIDs[index] == -1){
 					printf("Error! Can't fork.\n");
 					continue; /* Tries again */
 				}
-				if (childrenPIDs[currentChildren] == 0) { /* Child Process */
+				if (childrenPIDs[index] == 0) { /* Child Process */
 					runSeqSolver();
 				} else { /* Dad Process */
 					index++;

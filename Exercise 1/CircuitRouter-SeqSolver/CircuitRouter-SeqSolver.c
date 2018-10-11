@@ -182,8 +182,6 @@ int main(int argc, char** argv){
 		exists, changes name to fNameResOld */
 		outputFile = fopen(fNameRes, "w");
 
-		//TODO file created successfully but rename makes a backup-file (inaccessible)
-
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 

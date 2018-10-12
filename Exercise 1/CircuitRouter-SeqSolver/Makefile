@@ -9,7 +9,13 @@ CFLAGS =-Wall -std=gnu99 -I../
 LDFLAGS=-lm
 TARGET = CircuitRouter-SeqSolver
 
-all: $(TARGET)
+all: shell solver
+
+
+shell:
+	gcc -Wall -std=gnu99 CircuitRouter-SimpleShell.c -o CircuitRouter-SimpleShell
+
+solver: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS)
@@ -30,3 +36,4 @@ $(OBJS):
 clean:
 	@echo Cleaning...
 	rm -f $(OBJS) $(TARGET)
+	rm -f CircuitRouter-SimpleShell CircuitRouter-SimpleShell.o

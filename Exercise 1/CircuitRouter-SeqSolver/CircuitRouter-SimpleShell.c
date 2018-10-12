@@ -88,7 +88,7 @@ int main(int argc, char** argv){
 		if (argc == 0)
 			maxChildren = -1; /* unlimited children */
 		else
-			maxChildren = atoi(argv[i]);
+			maxChildren = atoi(argv[1]);
 		parseCommand(maxChildren);
 	}
 

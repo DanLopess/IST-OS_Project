@@ -29,7 +29,7 @@ void parseCommand(int maxChildren){
 	int index = 0; /* Index of last childrenPID inserted into array */
 	int maxIndex = maxChildren;
 	int currentChildren = 0; /* Control the number of children executing */
-	int status, result, i = 0;
+	int status, result, control = 0, i;
 	char *argVector[3], line[256];
 	int argVectorSize = 3, bufferSize = 256;
 
@@ -45,11 +45,11 @@ void parseCommand(int maxChildren){
 	while (1) {
 		result = readLineArguments(argVector, argVectorSize, line, bufferSize);
 		if (result == 1 && !strcmp(argVector[0], "exit")) {
-			for (; i < index; i++) /*Waits for all unfinished children*/
-				childrenSuccess[i] = waitpid(childrenPIDs[i], &status, WIFEXITED(status));
+			for (; control < index; control++) /*Waits for all unfinished children*/
+				childrenSuccess[control] = waitpid(childrenPIDs[control], &status, WIFEXITED(status));
 
 			for (i = 0; i < index; i++) {
-				if (childrenSuccess[i]) {
+				if (childrenSuccess[i] != -1) {
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
 				} else{
 					printf("CHILD EXITED (PID=%d; return NOK)\n", childrenPIDs[i]);
@@ -71,9 +71,10 @@ void parseCommand(int maxChildren){
 			}
 
 			else { /*too many children to create another */
-				childrenSuccess[i] = waitpid(-1, &status, 0); /* Wait for any child to terminate (at least one)*/
+				childrenSuccess[control] = waitpid(-1, &status, 0); /* Wait for any child to terminate (at least one)*/
+				printf("childrenSuccess[control] = %d", childrenSuccess[control]);
 				currentChildren--;
-				i++;
+				control++;
 			}
 			create_child(childrenPIDs, &index, &currentChildren, argVector);
 		}
@@ -99,7 +100,7 @@ int main(int argc, char** argv){
 		if (argc == 1)
 			maxChildren = -1; /* unlimited children */
 		else
-			maxChildren = atoi(argv[1]);
+			maxChildren = atoi(argv[1]); /* convert string from argument to integer */
 		parseCommand(maxChildren);
 	}
 

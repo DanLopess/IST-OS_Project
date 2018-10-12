@@ -84,7 +84,7 @@ int main(int argc, char** argv){
 	 int maxChildren;
 
 	/* Main functionality */
-	if (argc == 0 || argc == 1) { /*No more than 1 argument allowed*/
+	if (argc == 1 || argc == 2) { /*No more than 1 argument allowed*/
 		if (argc == 0)
 			maxChildren = -1; /* unlimited children */
 		else
@@ -93,7 +93,7 @@ int main(int argc, char** argv){
 	}
 
 	else{
-		printf("Error! Too many arguments.");
+		printf("Error! Too many arguments.\n");
 		exit(1);
 	}
 	return 0;

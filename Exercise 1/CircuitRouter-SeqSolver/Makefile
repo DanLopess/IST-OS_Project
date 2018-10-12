@@ -13,7 +13,8 @@ all: shell solver
 
 
 shell:
-	gcc -Wall -std=gnu99 CircuitRouter-SimpleShell.c -o CircuitRouter-SimpleShell
+	$(CC) $(CFLAGS) CircuitRouter-SimpleShell.c -o CircuitRouter-SimpleShell
+
 
 solver: $(TARGET)
 

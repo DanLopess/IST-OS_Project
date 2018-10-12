@@ -17,7 +17,7 @@ void create_child(int* childrenPIDs, int* index, int *currentChildren, char **ar
 		printf("Error! Can't fork.\n");
 	}
 	if (childrenPIDs[*index] == 0) { /* Child Process */
-		execl("", "CircuitRouterseq-solver", argVector[1], NULL);
+		execl("CircuitRouter-seqsolver", "CircuitRouter-seqsolver", argVector[1],(char*) NULL);
 	} else { /* Dad Process */
 		index++;
 		currentChildren++;
@@ -29,7 +29,7 @@ void parseCommand(int maxChildren){
 	int index = 0; /* Index of last childrenPID inserted into array */
 	int maxIndex = maxChildren;
 	int currentChildren = 0; /* Control the number of children executing */
-	int status, i = 0;
+	int status, result, i = 0;
 	char *argVector[3], line[256];
 	int argVectorSize = 3, bufferSize = 256;
 
@@ -43,7 +43,7 @@ void parseCommand(int maxChildren){
 	}
 
 	while (1) {
-		int result = readLineArguments(argVector, argVectorSize, line, bufferSize);
+		result = readLineArguments(argVector, argVectorSize, line, bufferSize);
 		if (result == 1 && !strcmp(argVector[0], "exit")) {
 			for (; i < index; i++) /*Waits for all unfinished children*/
 				childrenSuccess[i] = waitpid(childrenPIDs[i], &status, WIFEXITED(status));
@@ -69,15 +69,14 @@ void parseCommand(int maxChildren){
 					childrenSuccess = realloc(childrenPIDs, (sizeof(int)*maxIndex + 10));
 					maxIndex = maxIndex + 10;
 				}
-				create_child(childrenPIDs, &index, &currentChildren, argVector);
 			}
 
 			else { /*too many children to create another */
 				childrenSuccess[i] = waitpid(-1, &status, 0); /* Wait for any child to terminate (at least one)*/
 				currentChildren--;
 				i++;
-				create_child(childrenPIDs, &index, &currentChildren, argVector);
 			}
+			create_child(childrenPIDs, &index, &currentChildren, argVector);
 		}
 		else{
 			printf("Invalid command!\n");

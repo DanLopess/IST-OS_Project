@@ -45,7 +45,7 @@ void parseCommand(int maxChildren){
 	}
 
 	while (scanf("%s", command)) {
-		if (strcmp(command, "exit")) {
+		if (!strcmp(command, "exit")) {
 			for (i = 0; i <= index; i++){
 				if (waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
@@ -56,7 +56,7 @@ void parseCommand(int maxChildren){
 			printf("END.\n");
 			exit(0);
 		}
-		else if (strcmp(command, "run")) {
+		else if (!strcmp(command, "run")) {
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				if (index == maxIndex) {
 					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*index + 10));/* Doubles size of array*/

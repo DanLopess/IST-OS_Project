@@ -162,10 +162,10 @@ int main(int argc, char** argv){
      * Initialization
      */
     parseArgs(argc, argv);
-		char *fNameRes = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+4));
+		char fNameRes[256];
 		strcpy(fNameRes, global_inputFile);
 		strcat(fNameRes,".res");
-		char *fNameResOld = (char*)malloc(sizeof(char) * (strlen(global_inputFile)+8));
+		char fNameResOld[256];
 		strcpy(fNameResOld, global_inputFile);
 		strcat(fNameResOld,".res.old");
 
@@ -239,11 +239,8 @@ int main(int argc, char** argv){
         vector_free(pathVectorPtr);
     }
     list_free(pathVectorListPtr);
-
 		fclose(inputFile);
 		fclose(outputFile);
-		free(fNameRes);
-		free(fNameResOld);
 
     exit(0);
 }

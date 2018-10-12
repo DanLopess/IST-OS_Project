@@ -35,7 +35,10 @@ coordinate.o: coordinate.c coordinate.h ../lib/pair.h ../lib/types.h
 $(OBJS):
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+
 clean:
 	@echo Cleaning...
+	rm -f *.res
+	rm -f *.old
 	rm -f $(OBJS) $(TARGET)
 	rm -f CircuitRouter-SimpleShell CircuitRouter-SimpleShell.o

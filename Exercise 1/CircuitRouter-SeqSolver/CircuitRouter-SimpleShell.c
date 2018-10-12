@@ -16,11 +16,11 @@ void create_child(int* childrenPIDs, int* index, int *currentChildren, char **ar
 	if (childrenPIDs[*index] == -1){
 		printf("Error! Can't fork.\n");
 	}
-	if (childrenPIDs[*index] == 0) { /* Child Process */
+	else if (childrenPIDs[*index] != 0) { /* Father Process */
+		*index = *index + 1;
+		*currentChildren = *currentChildren + 1;
+	} else { /* Child Process */
 		execl("CircuitRouter-seqsolver", "CircuitRouter-seqsolver", argVector[1],(char*) NULL);
-	} else { /* Dad Process */
-		index++;
-		currentChildren++;
 	}
 }
 
@@ -55,7 +55,6 @@ void parseCommand(int maxChildren){
 					printf("CHILD EXITED (PID=%d; return NOK)\n", childrenPIDs[i]);
 				}
 			}
-
 			printf("END.\n");
 			free(childrenPIDs);
 			free(childrenSuccess);

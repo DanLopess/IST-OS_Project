@@ -238,10 +238,10 @@ void grid_print (grid_t* gridPtr, FILE *fRes){
 		fprintf(fRes, "Routed Maze:");
 		for (z = 0; z < depth; z++) {
         fprintf(fRes,"\n[z = %li]\n", z);
-        long y;
-        for (y = 0; y < height; y++) {
-            long x;
-            for (x = 0; x < width; x++) {
+        long x;
+        for (x = 0; x < height; x++) {
+            long y;
+            for (y = 0; y < width; y++) {
                 fprintf(fRes, "%4li", *grid_getPointRef(gridPtr, x, y, z));
             }
             fprintf(fRes, "\n");

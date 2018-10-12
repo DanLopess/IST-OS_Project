@@ -2,7 +2,7 @@
 # Sistemas Operativos, DEI/IST/ULisboa 2018-19
 
 SOURCES =router.c maze.c grid.c coordinate.c CircuitRouter-SeqSolver.c
-SOURCES+= ../lib/vector.c ../lib/queue.c ../lib/list.c ../lib/pair.c
+SOURCES+= ../lib/vector.c ../lib/queue.c ../lib/list.c ../lib/pair.c ../lib/commandlinereader.c
 OBJS = $(SOURCES:%.c=%.o)
 CC   = gcc
 CFLAGS =-Wall -std=gnu99 -g -I../
@@ -12,8 +12,8 @@ TARGET = CircuitRouter-SeqSolver
 all: shell solver
 
 
-shell:
-	$(CC) $(CFLAGS) CircuitRouter-SimpleShell.c -o CircuitRouter-SimpleShell
+shell: ../lib/commandlinereader.o
+	$(CC) $(CFLAGS) ../lib/commandlinereader.o CircuitRouter-SimpleShell.c -o CircuitRouter-SimpleShell
 
 
 solver: $(TARGET)
@@ -30,6 +30,7 @@ coordinate.o: coordinate.c coordinate.h ../lib/pair.h ../lib/types.h
 ../lib/queue.o: ../lib/queue.c ../lib/queue.h ../lib/types.h
 ../lib/list.o: ../lib/list.c ../lib/list.h ../lib/types.h
 ../lib/pair.o: ../lib/pair.c ../lib/pair.h
+../lib/commandlinereader.o: ../lib/commandlinereader.c ../lib/commandlinereader.h
 
 $(OBJS):
 	$(CC) $(CFLAGS) -c -o $@ $<

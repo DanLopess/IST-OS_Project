@@ -9,20 +9,15 @@ Developed by Daniel Lopes & Nuno Ramos, IST
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "../lib/commandlinereader.h"
 
-void runSeqSolver() {
-	char fileName[256];
-	scanf("%s", fileName);
-	execl("", "CircuitRouterseq-solver", fileName, NULL);
-}
-
-void create_child(int* childrenPIDs, int* index, int *currentChildren) {
+void create_child(int* childrenPIDs, int* index, int *currentChildren, char **argVector) {
 	childrenPIDs[*index] = fork();
 	if (childrenPIDs[*index] == -1){
 		printf("Error! Can't fork.\n");
 	}
 	if (childrenPIDs[*index] == 0) { /* Child Process */
-		runSeqSolver();
+		execl("", "CircuitRouterseq-solver", argVector[1], NULL);
 	} else { /* Dad Process */
 		index++;
 		currentChildren++;
@@ -35,7 +30,8 @@ void parseCommand(int maxChildren){
 	int maxIndex = maxChildren;
 	int currentChildren = 0; /* Control the number of children executing */
 	int status, i;
-	char command[256]; /*large size to acomodate large file names*/
+	char *argVector[3], line[256];
+	int argVectorSize = 3, bufferSize = 256;
 
 /*Initialization*/
 	if(maxChildren >= 0){
@@ -44,8 +40,9 @@ void parseCommand(int maxChildren){
 		childrenPIDs = (int*) malloc(sizeof(int)*10);
 	}
 
-	while (scanf("%s", command)) {
-		if (!strcmp(command, "exit")) {
+	while (1) {
+		int result = readLineArguments(argVector, argVectorSize, line, bufferSize);
+		if (result == 1 && !strcmp(argVector[0], "exit")) {
 			for (i = 0; i < index; i++){
 				if (waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
@@ -57,19 +54,20 @@ void parseCommand(int maxChildren){
 			free(childrenPIDs);
 			exit(0);
 		}
-		else if (!strcmp(command, "run")) {
+
+		else if (result == 2 && !strcmp(argVector[0], "run")) {
 			if (maxChildren == -1 || currentChildren < maxChildren) {
 				if (index == maxIndex) {
-					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*index + 10));/* Doubles size of array*/
+					childrenPIDs = realloc(childrenPIDs, (sizeof(int)*maxIndex + 10));/* Increases size of array*/
 					maxIndex = maxIndex + 10;
 				}
-				create_child(childrenPIDs, &index, &currentChildren);
+				create_child(childrenPIDs, &index, &currentChildren, argVector);
 			}
 
 			else { /*too many children to create another */
 				waitpid(-1, &status, 0); /* Wait for any child to terminate (at least one)*/
 				currentChildren--;
-				create_child(childrenPIDs, &index, &currentChildren);
+				create_child(childrenPIDs, &index, &currentChildren, argVector);
 			}
 		}
 		else{

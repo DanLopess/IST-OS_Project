@@ -46,7 +46,7 @@ void parseCommand(int maxChildren){
 
 	while (scanf("%s", command)) {
 		if (!strcmp(command, "exit")) {
-			for (i = 0; i <= index; i++){
+			for (i = 0; i < index; i++){
 				if (waitpid(childrenPIDs[i], &status, WIFEXITED(status))){
 					printf("CHILD EXITED (PID=%d; return OK)\n", childrenPIDs[i]);
 				} else{
@@ -54,6 +54,7 @@ void parseCommand(int maxChildren){
 				}
 			}
 			printf("END.\n");
+			free(childrenPIDs);
 			exit(0);
 		}
 		else if (!strcmp(command, "run")) {
@@ -71,12 +72,10 @@ void parseCommand(int maxChildren){
 				create_child(childrenPIDs, &index, &currentChildren);
 			}
 		}
-
 		else{
 			printf("Invalid command!\n");
 		}
 	}
-	free(childrenPIDs);
 }
 
 
@@ -92,7 +91,7 @@ int main(int argc, char** argv){
 
 	/* Main functionality */
 	if (argc == 1 || argc == 2) { /*No more than 1 argument allowed*/
-		if (argc == 0)
+		if (argc == 1)
 			maxChildren = -1; /* unlimited children */
 		else
 			maxChildren = atoi(argv[1]);

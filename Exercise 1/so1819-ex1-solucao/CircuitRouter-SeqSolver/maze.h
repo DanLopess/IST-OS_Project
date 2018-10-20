@@ -54,8 +54,7 @@
 #ifndef MAZE_H
 #define MAZE_H 1
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include "coordinate.h"
 #include "grid.h"
 #include "lib/list.h"
@@ -92,15 +91,14 @@ void maze_free (maze_t* mazePtr);
  * -- Return number of path to route
  * =============================================================================
  */
-long maze_read (maze_t* mazePtr, FILE* finput, FILE* foutput);
+long maze_read (maze_t* mazePtr, char * input, FILE* fp);
 
 
 /* =============================================================================
  * maze_checkPaths
  * =============================================================================
  */
-bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathListPtr,
-												bool_t doPrintPaths, FILE* outputFile);
+bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathListPtr, FILE *fp, bool_t doPrintPaths);
 
 
 #endif /* MAZE_H */

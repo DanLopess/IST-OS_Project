@@ -58,6 +58,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "lib/list.h"
 #include "maze.h"
 #include "router.h"
@@ -81,6 +82,7 @@ enum param_defaults {
 bool_t global_doPrint = TRUE;
 char* global_inputFile = NULL;
 long global_params[256]; /* 256 = ascii limit */
+unsigned int NUMTHREADS = 1; /* Number of threads > 0*/
 
 
 /* =============================================================================
@@ -110,6 +112,13 @@ static void setDefaultParams (){
     global_params[PARAM_ZCOST]    = PARAM_DEFAULT_ZCOST;
 }
 
+/* =============================================================================
+ * threadManagement - Manages all thread related work
+ * =============================================================================
+ */
+ void threadManagement(){
+
+ }
 
 /* =============================================================================
  * parseArgs
@@ -133,6 +142,12 @@ static void parseArgs (long argc, char* const argv[]){
             case '?':
             case 'h':
                 displayUsage(argv[0]);
+            case: 't':
+                if(atoi(optarg) > 0){
+                  NUMTHREADS = atoi(optarg);
+                }else{
+                  fprintf(stderr, "Invalid argument\n");
+                }
             default:
                 break;
         }

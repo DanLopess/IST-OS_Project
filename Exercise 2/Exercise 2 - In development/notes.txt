@@ -1,0 +1,32 @@
+Notes:
+
+Motivação para se usar threads:
+- Melhorar performance
+- Ocorrem problemas de paralização Exemplo:
+    2 threads querem incrementar um valor a que inicial é a = 10
+
+    T1    T2
+    a++   a++
+MOV R1, [a]
+MOV R2, R1
+ADD R2, 1
+MOV [a], R2 ; resultado em R1
+
+ordem de execução não é controlavel, logo a pode ficar a 11 ou 12
+
+
+DeadLock vs Starvation:
+- Deadlock acontece quando uma ou mais threads tentam aceder ao mesmo recurso partilhado mas fazem-nos em
+zonas diferentes e uma bloqueia a outra e nao saem dali; Resolução: obter locks pela mesma ordem (ordenar locks)
+- Starvation acontece quando ha um numero muito elevado de threads a espera com prioridade e uma thread
+  que fica a espera quase infinitamente
+
+Granularidades FINA vs GROSSA:
+- Diferença: o que e que esta a ser bloqueado
+
+Locks:
+  try lock pode ser util pois se uma thread ja escreveu podemos ter de voltar atras em vez de ficar a espera
+  Mutex       pthread_mutex
+  rwlock      pthread_rwlock (pode retornar erro)
+  "recursive" Mutex pthread_mutex + pthread_mutex_recursive
+  "recursive" rwlock pthread_rwlock + ''

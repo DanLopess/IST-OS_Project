@@ -112,13 +112,6 @@ static void setDefaultParams (){
     global_params[PARAM_ZCOST]    = PARAM_DEFAULT_ZCOST;
 }
 
-/* =============================================================================
- * threadManagement - Manages all thread related work
- * =============================================================================
- */
- void threadManagement(){
-
- }
 
 /* =============================================================================
  * parseArgs
@@ -131,7 +124,7 @@ static void parseArgs (long argc, char* const argv[]){
 
     setDefaultParams();
 
-    while ((opt = getopt(argc, argv, "hb:x:y:z:")) != -1) {
+    while ((opt = getopt(argc, argv, "hb:x:y:z:t:")) != -1) {
         switch (opt) {
             case 'b':
             case 'x':
@@ -142,12 +135,14 @@ static void parseArgs (long argc, char* const argv[]){
             case '?':
             case 'h':
                 displayUsage(argv[0]);
-            case: 't':
+            case 't':{
                 if(atoi(optarg) > 0){
                   NUMTHREADS = atoi(optarg);
                 }else{
                   fprintf(stderr, "Invalid argument\n");
                 }
+                break;
+              }
             default:
                 break;
         }
@@ -186,6 +181,14 @@ FILE * outputFile() {
     }
     return fp;
 }
+
+/* =============================================================================
+ * threadManagement - Manages all thread related work
+ * =============================================================================
+ */
+ void threadManagement(){
+
+ }
 
 
 /* =============================================================================

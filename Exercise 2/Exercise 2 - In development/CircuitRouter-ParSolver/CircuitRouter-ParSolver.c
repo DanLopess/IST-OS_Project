@@ -184,12 +184,28 @@ FILE * outputFile() {
 
 /* =============================================================================
  * threadManagement - Manages all thread related work
+ *	returns: pthread_t pointer (contains all threads ids) TODO
  * =============================================================================
  */
- void threadManagement(){
+ pthread_t* threadManagement(){
+	 int i;
+	 pthread_t tid[NUMTHREADS]; /* Stores threads IDs */
 
+	 for(i = 0; i < NUMTHREADS; i++){
+		 pthread_create(&tid[i], NULL, executeThreadFunc, NULL);
+	 }
  }
 
+
+ /* =============================================================================
+  * executeThreadFunc
+  * =============================================================================
+  */
+
+void executeThreadFunc(){
+	// inside router solve? grab a pair of points (from workQueuePtr)
+	// queuePop --> gets a set of points
+}
 
 /* =============================================================================
  * main

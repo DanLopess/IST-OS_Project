@@ -289,6 +289,63 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
 
 
 /* =============================================================================
+ * router_solve: Iterate over work list to route each path. This involves an
+ * 'expansion' and 'traceback' phase for each source/destination pair.
+ * =============================================================================
+ */
+void routePaths(router_solve_arg_t* routerArgPtr){
+
+	maze_t* mazePtr = routerArgPtr->mazePtr;
+	vector_t* myPathVectorPtr = vector_alloc(1);
+	assert(myPathVectorPtr);
+
+	queue_t* workQueuePtr = mazePtr->workQueuePtr;
+	grid_t* gridPtr = mazePtr->gridPtr;
+	grid_t* myGridPtr = grid_alloc(gridPtr->width, gridPtr->height, gridPtr->depth);
+	assert(myGridPtr);
+	long bendCost = routerPtr->bendCost;
+	queue_t* myExpansionQueuePtr = queue_alloc(-1);
+
+	while (1) {
+
+			pair_t* coordinatePairPtr;
+			if (queue_isEmpty(workQueuePtr)) {
+					coordinatePairPtr = NULL;
+			} else {
+					coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
+			}
+			if (coordinatePairPtr == NULL) {
+					break;
+			}
+
+			coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
+			coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
+
+			pair_free(coordinatePairPtr);
+
+			bool_t success = FALSE;
+			vector_t* pointVectorPtr = NULL;
+
+			grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
+			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
+											 srcPtr, dstPtr)) {
+					pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
+					if (pointVectorPtr) {
+							grid_addPath_Ptr(gridPtr, pointVectorPtr);
+
+							success = TRUE;
+					}
+			}
+
+			if (success) {
+					bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
+					assert(status);
+			}
+
+	}
+}
+
+/* =============================================================================
  * router_solve
  * =============================================================================
  */
@@ -307,47 +364,7 @@ void router_solve (void* argPtr){
     long bendCost = routerPtr->bendCost;
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
-    /*
-     * Iterate over work list to route each path. This involves an
-     * 'expansion' and 'traceback' phase for each source/destination pair.
-     */
-    while (1) {
-
-        pair_t* coordinatePairPtr;
-        if (queue_isEmpty(workQueuePtr)) {
-            coordinatePairPtr = NULL;
-        } else {
-            coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-        }
-        if (coordinatePairPtr == NULL) {
-            break;
-        }
-
-        coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
-        coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
-
-        pair_free(coordinatePairPtr);
-
-        bool_t success = FALSE;
-        vector_t* pointVectorPtr = NULL;
-
-        grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
-        if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
-                         srcPtr, dstPtr)) {
-            pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
-            if (pointVectorPtr) {
-                grid_addPath_Ptr(gridPtr, pointVectorPtr);
-
-                success = TRUE;
-            }
-        }
-
-        if (success) {
-            bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
-            assert(status);
-        }
-
-    }
+		routePaths(routerArgPtr);
 
     /*
      * Add my paths to global list
@@ -355,7 +372,7 @@ void router_solve (void* argPtr){
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 
-    grid_free(myGridPtr);
+    grid_free(myGridPtr); // how to do this if each grid is created by a thread?
     queue_free(myExpansionQueuePtr);
 }
 

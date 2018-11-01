@@ -5,8 +5,8 @@ SOURCES = router.c maze.c grid.c coordinate.c CircuitRouter-ParSolver.c
 SOURCES+= ../lib/vector.c ../lib/queue.c ../lib/list.c ../lib/pair.c
 OBJS = $(SOURCES:%.c=%.o)
 CC   = gcc
-CFLAGS =-Wall -std=gnu99 -I../
-LDFLAGS=-lm
+CFLAGS =-Wall -std=gnu99 -I../ 
+LDFLAGS=-lm -lpthread
 TARGET = CircuitRouter-ParSolver
 
 all: $(TARGET)

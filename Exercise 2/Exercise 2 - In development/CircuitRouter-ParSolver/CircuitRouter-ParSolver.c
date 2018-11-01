@@ -187,12 +187,12 @@ FILE * outputFile() {
  *	returns: pthread_t pointer (contains all threads ids) TODO
  * =============================================================================
  */
- pthread_t* threadManagement(){
+ pthread_t* threadCreate(){
 	 int i;
 	 pthread_t tid[NUMTHREADS]; /* Stores threads IDs */
 
 	 for(i = 0; i < NUMTHREADS; i++){
-		 pthread_create(&tid[i], NULL, executeThreadFunc, NULL);
+		 pthread_create(&tid[i], NULL, routePaths, NULL);
 	 }
  }
 

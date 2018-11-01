@@ -309,9 +309,10 @@ void* router_solve (void* argPtr){
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
 		/*Thread management variables*/
-		pthread_mutex_t grid_lock, queue_lock;
+		pthread_mutex_t grid_lock, queue_lock, insert_lock;
 		pthread_mutex_init(&grid_lock, NULL);
 		pthread_mutex_init(&queue_lock, NULL);
+    pthread_mutex_init(&insert_lock, NULL);
 
 		while (1) {
 
@@ -362,11 +363,15 @@ void* router_solve (void* argPtr){
     /*
      * Add my paths to global list
      */
+    pthread_mutex_lock(&queue_lock); /* Routed paths can only be added one at a time*/
+
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 
     grid_free(myGridPtr); // how to do this if each grid is created by a thread?
     queue_free(myExpansionQueuePtr);
+
+    pthread_mutex_unlock(&queue_lock);
 
 		return 0;
 }

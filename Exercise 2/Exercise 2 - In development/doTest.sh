@@ -5,24 +5,33 @@
 clear
 echo "Speed_up: Efficiency meter"
 
-read option
-read inputName
+option=$1
+inputName=$2
+
+echo $inputName
 
 cd CircuitRouter-SeqSolver
 
-seqTime = time ./CircuitRouter-SeqSolver $inputName # execute sequential
+for entry in "$search_dir"/*
+do
+  echo "$entry"
+done
+
+seqTime=time ./CircuitRouter-SeqSolver $inputName # execute sequential
+echo $seqTime
 echo "#threads, exec_time, speedup"
 echo "1S,$seqTime,1"
 
-cd ../CircuitRouter-ParSolver
+cd ..
+cd CircuitRouter-ParSolver
 
-var = 1
+var=1
 while [ $var -le $option ]
 do # Runs ParSolver with 1 to n threads, n times
-  parTime = time ./CircuitRouter-ParSolver $var $inputName
-  speedup = $(echo "scale=6; ${seqTime}/${parTime}" | bc)
+  parTime=time ./CircuitRouter-ParSolver -t $var $inputName
+  speedup=$(echo "scale=6; ${seqTime}/${parTime}" | bc)
   echo "$var,$parTime,$speedup"
-	var = $((var+1))
+	var=$((var+1))
 done
 
 echo "Leaving script..."

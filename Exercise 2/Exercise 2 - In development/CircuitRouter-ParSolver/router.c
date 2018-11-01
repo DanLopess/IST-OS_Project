@@ -58,6 +58,8 @@
 #include "lib/queue.h"
 #include "router.h"
 #include "lib/vector.h"
+#include <unistd.h>
+#include <pthread.h>
 
 
 typedef enum momentum {
@@ -289,83 +291,74 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
 
 
 /* =============================================================================
- * router_solve: Iterate over work list to route each path. This involves an
- * 'expansion' and 'traceback' phase for each source/destination pair.
- * =============================================================================
- */
-void routePaths(router_solve_arg_t* routerArgPtr){
-
-	maze_t* mazePtr = routerArgPtr->mazePtr;
-	vector_t* myPathVectorPtr = vector_alloc(1);
-	assert(myPathVectorPtr);
-
-	queue_t* workQueuePtr = mazePtr->workQueuePtr;
-	grid_t* gridPtr = mazePtr->gridPtr;
-	grid_t* myGridPtr = grid_alloc(gridPtr->width, gridPtr->height, gridPtr->depth);
-	assert(myGridPtr);
-	long bendCost = routerPtr->bendCost;
-	queue_t* myExpansionQueuePtr = queue_alloc(-1);
-
-	while (1) {
-
-			pair_t* coordinatePairPtr;
-			if (queue_isEmpty(workQueuePtr)) {
-					coordinatePairPtr = NULL;
-			} else {
-					coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-			}
-			if (coordinatePairPtr == NULL) {
-					break;
-			}
-
-			coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
-			coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
-
-			pair_free(coordinatePairPtr);
-
-			bool_t success = FALSE;
-			vector_t* pointVectorPtr = NULL;
-
-			grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
-			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
-											 srcPtr, dstPtr)) {
-					pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
-					if (pointVectorPtr) {
-							grid_addPath_Ptr(gridPtr, pointVectorPtr);
-
-							success = TRUE;
-					}
-			}
-
-			if (success) {
-					bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
-					assert(status);
-			}
-
-	}
-}
-
-/* =============================================================================
  * router_solve
  * =============================================================================
  */
-void router_solve (void* argPtr){
-
+void* router_solve (void* argPtr){
     router_solve_arg_t* routerArgPtr = (router_solve_arg_t*)argPtr;
     router_t* routerPtr = routerArgPtr->routerPtr;
     maze_t* mazePtr = routerArgPtr->mazePtr;
     vector_t* myPathVectorPtr = vector_alloc(1);
     assert(myPathVectorPtr);
-
     queue_t* workQueuePtr = mazePtr->workQueuePtr;
+
     grid_t* gridPtr = mazePtr->gridPtr;
     grid_t* myGridPtr = grid_alloc(gridPtr->width, gridPtr->height, gridPtr->depth);
     assert(myGridPtr);
     long bendCost = routerPtr->bendCost;
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
-		routePaths(routerArgPtr);
+		/*Thread management variables*/
+		pthread_mutex_t grid_lock, queue_lock;
+		pthread_mutex_init(&grid_lock, NULL);
+		pthread_mutex_init(&queue_lock, NULL);
 
+		while (1) {
+
+				pair_t* coordinatePairPtr;
+
+				pthread_mutex_lock(&queue_lock); /* Need to lock here Because if a
+				thread locked before queue_pop and another thread had already checked
+				if queue was empty, it might be empty after thread one unlocked mutex*/
+
+				if (queue_isEmpty(workQueuePtr)) {
+						coordinatePairPtr = NULL;
+				} else {
+						coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
+				}
+				pthread_mutex_unlock(&queue_lock); /* can unlock now */
+
+				if (coordinatePairPtr == NULL) {
+						break;
+				}
+
+				coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
+				coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
+
+				pair_free(coordinatePairPtr);
+
+				bool_t success = FALSE;
+				vector_t* pointVectorPtr = NULL;
+
+				pthread_mutex_lock(&grid_lock);
+				grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
+				if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
+												 srcPtr, dstPtr)) {
+						pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
+						if (pointVectorPtr) {
+								grid_addPath_Ptr(gridPtr, pointVectorPtr);
+
+								success = TRUE;
+						}
+				}
+
+				if (success) {
+						bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
+						assert(status);
+				}
+				pthread_mutex_unlock(&grid_lock);
+
+		}
     /*
      * Add my paths to global list
      */
@@ -374,6 +367,8 @@ void router_solve (void* argPtr){
 
     grid_free(myGridPtr); // how to do this if each grid is created by a thread?
     queue_free(myExpansionQueuePtr);
+
+		return 0;
 }
 
 

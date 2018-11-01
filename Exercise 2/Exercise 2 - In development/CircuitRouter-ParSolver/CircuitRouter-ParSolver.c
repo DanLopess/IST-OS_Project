@@ -183,29 +183,31 @@ FILE * outputFile() {
 }
 
 /* =============================================================================
- * threadManagement - Manages all thread related work
- *	returns: pthread_t pointer (contains all threads ids) TODO
+ * threadcreate - Creates all NUMTHREADS and assigns them work
+ *	returns: void
  * =============================================================================
  */
- pthread_t* threadCreate(){
+ void threadCreate(void* argPtr){
 	 int i;
-	 pthread_t tid[NUMTHREADS]; /* Stores threads IDs */
+	 pthread_t* tid = (pthread_t*) malloc(sizeof(pthread_t)*NUMTHREADS); /* Stores threads IDs */
 
 	 for(i = 0; i < NUMTHREADS; i++){
-		 pthread_create(&tid[i], NULL, routePaths, NULL);
+		 if(pthread_create(&tid[i], NULL, router_solve, argPtr)!=0){
+			 fprintf(stderr, "Failed to create thread.\n");
+		 }
+		 else{
+			 printf("Created thread: %ld\n", tid[i]); /*For debugging purposes DELETE THIS */
+		 }
 	 }
+	 for(i = 0; i < NUMTHREADS; i++){
+		 /*awaits for threads to finish and free tid in the end. */
+		 if(pthread_join(tid[i], NULL)!=0) /*If not successful*/{
+			 fprintf(stderr, "Thread terminated abruptly or encountered an error.\n");
+		 }
+	 }
+	 free(tid);
+
  }
-
-
- /* =============================================================================
-  * executeThreadFunc
-  * =============================================================================
-  */
-
-void executeThreadFunc(){
-	// inside router solve? grab a pair of points (from workQueuePtr)
-	// queuePop --> gets a set of points
-}
 
 /* =============================================================================
  * main
@@ -232,7 +234,7 @@ int main(int argc, char** argv){
     TIMER_T startTime;
     TIMER_READ(startTime);
 
-    router_solve((void *)&routerArg);
+    threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
 
     TIMER_T stopTime;
     TIMER_READ(stopTime);

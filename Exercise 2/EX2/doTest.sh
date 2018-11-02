@@ -3,7 +3,7 @@
 # Note: This script evaluates the efficiency of a parallel solution against a sequential one
 
 clear
-echo "Speed_up: Efficiency meter"
+echo "====== Speed_up: Efficiency meter ======"
 
 option=$1
 inputName=$2
@@ -22,4 +22,4 @@ do # Runs ParSolver with 1 to n threads, n times
 	var=$((var+1))
 done
 
-echo "Leaving script..."
+echo "====== Leaving script... ======"

@@ -194,6 +194,7 @@ FILE * outputFile() {
 	 for(i = 0; i < NUMTHREADS; i++){
 		 if(pthread_create(&tid[i], NULL, router_solve, argPtr)!=0){
 			 fprintf(stderr, "Failed to create thread.\n");
+			 exit(1);
 		 }
 		 else{
 			 printf("Created thread: %ld\n", tid[i]); /*For debugging purposes DELETE THIS */
@@ -203,6 +204,7 @@ FILE * outputFile() {
 		 /*awaits for threads to finish and free tid in the end. */
 		 if(pthread_join(tid[i], NULL)!=0) /*If not successful*/{
 			 fprintf(stderr, "Thread terminated abruptly or encountered an error.\n");
+			 exit(1);
 		 }
 	 }
 	 free(tid);

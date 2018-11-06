@@ -243,7 +243,7 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
         grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
 				/*if (grid_isPointEmpty(gridPtr, next.x, next.y, next.z))
-					return NULL;  /*Checks if crosses other path*/
+					return NULL;  Checks if crosses other path*/
 
         /* Check if we are done */
         if (next.value == 0) {
@@ -332,6 +332,7 @@ void* router_solve (void* argPtr){
 
 				if (pthread_mutex_lock(&queue_lock)!=0) {
         	fprintf(stderr, "Failed to lock.\n");
+          exit(1);
       	}
 
 				if (queue_isEmpty(workQueuePtr)) {
@@ -357,11 +358,12 @@ void* router_solve (void* argPtr){
 				vector_t* pointVectorPtr = NULL;
 
 				do {
-					printf("Grid copied by thread: %ld", pthread_self());
+					printf("Grid copied by thread: %ld\n", pthread_self());
 					grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
 
 					if (pthread_mutex_lock(&grid_lock)!=0) {
 	        	fprintf(stderr, "Failed to lock.\n");
+            exit(1);
 					}
 
 					if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {
@@ -387,6 +389,7 @@ void* router_solve (void* argPtr){
 
 				if (pthread_mutex_unlock(&grid_lock)!=0) {
         	fprintf(stderr, "Failed to unlock.\n");
+          exit(1);
 				}
 
 		}
@@ -395,6 +398,7 @@ void* router_solve (void* argPtr){
      */
 		if (pthread_mutex_lock(&insert_lock)!=0) {
  			fprintf(stderr, "Failed to lock.\n");
+      exit(1);
  		}
 
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
@@ -405,6 +409,7 @@ void* router_solve (void* argPtr){
 
 		if (pthread_mutex_unlock(&insert_lock)!=0) {
 			fprintf(stderr, "Failed to unlock.\n");
+      exit(1);
 		}
 
 		return 0;

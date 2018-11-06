@@ -243,11 +243,7 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
         grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
 				/*if (grid_isPointEmpty(gridPtr, next.x, next.y, next.z))
-<<<<<<< HEAD
-					return NULL;  Checks if crosses other path*/
-=======
-					return NULL; */ /*Checks if crosses other path*/
->>>>>>> 8f2f5e16bb7dad032145a913c5bb68d15bb4b1a4
+          return NULL; */ /*Checks if crosses other path*/
 
         /* Check if we are done */
         if (next.value == 0) {

@@ -243,7 +243,11 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
         grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
 				/*if (grid_isPointEmpty(gridPtr, next.x, next.y, next.z))
+<<<<<<< HEAD
 					return NULL;  Checks if crosses other path*/
+=======
+					return NULL; */ /*Checks if crosses other path*/
+>>>>>>> 8f2f5e16bb7dad032145a913c5bb68d15bb4b1a4
 
         /* Check if we are done */
         if (next.value == 0) {
@@ -357,7 +361,7 @@ void* router_solve (void* argPtr){
 				bool_t success = FALSE;
 				vector_t* pointVectorPtr = NULL;
 
-				do {
+				while (1) {
 					printf("Grid copied by thread: %ld\n", pthread_self());
 					grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
 
@@ -370,17 +374,20 @@ void* router_solve (void* argPtr){
 							pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
 							if (pointVectorPtr) {
 									grid_addPath_Ptr(gridPtr, pointVectorPtr);
+									/*printf("Path added by thread: %ld\n", pthread_self()); DEBUG*/
 									success = TRUE;
 									break;
 							}
 							else {
+								/*printf("Traceback failed by thread: %ld\n", pthread_self()); DEBUG*/
 								continue;
 							}
 					}
 					else{
+						/*printf("Expansion failed by thread: %ld\n", pthread_self());*DEBUG*/
 						break;
 					}
-				} while(1);
+				}
 
 				if (success) {
 						bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
@@ -404,7 +411,7 @@ void* router_solve (void* argPtr){
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 
-    grid_free(myGridPtr); // how to do this if each grid is created by a thread?
+    grid_free(myGridPtr); /*how to do this if each grid is created by a thread?*/
     queue_free(myExpansionQueuePtr);
 
 		if (pthread_mutex_unlock(&insert_lock)!=0) {

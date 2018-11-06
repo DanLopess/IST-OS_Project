@@ -238,9 +238,11 @@ int main(int argc, char** argv){
 
     threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
 
+	printf("Segf position checker\n"); /*DEBUG*/
     TIMER_T stopTime;
     TIMER_READ(stopTime);
 
+	printf("Segf position checker2\n"); /*DEBUG*/
     long numPathRouted = 0;
     list_iter_t it;
     list_iter_reset(&it, pathVectorListPtr);
@@ -256,13 +258,12 @@ int main(int argc, char** argv){
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
+	printf("Segf position checker3\n"); /*DEBUG*/
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
     assert(status == TRUE);
     fputs("Verification passed.\n",resultFp);
-
     maze_free(mazePtr);
     router_free(routerPtr);
-
     list_iter_reset(&it, pathVectorListPtr);
     while (list_iter_hasNext(&it, pathVectorListPtr)) {
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
@@ -274,7 +275,6 @@ int main(int argc, char** argv){
         vector_free(pathVectorPtr);
     }
     list_free(pathVectorListPtr);
-
     fclose(resultFp);
     exit(0);
 }

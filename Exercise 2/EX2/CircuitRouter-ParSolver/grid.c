@@ -202,6 +202,17 @@ void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
 
+	for (i = 0; i < n; i++) {
+		coordinate_t* coordinatePtr = (coordinate_t*)vector_at(pointVectorPtr, i);
+		long x = coordinatePtr->x;
+		long y = coordinatePtr->y;
+		long z = coordinatePtr->z;
+		if (!grid_isPointEmpty(gridPtr, x, y, z)) {
+			pointVectorPtr = NULL;
+			return;
+		}
+	}
+
     for (i = 0; i < n; i++) {
         coordinate_t* coordinatePtr = (coordinate_t*)vector_at(pointVectorPtr, i);
         long x = coordinatePtr->x;
@@ -222,7 +233,7 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 
     for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-        *gridPointPtr = GRID_POINT_FULL; 
+        *gridPointPtr = GRID_POINT_FULL;
     }
 }
 

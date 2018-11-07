@@ -240,9 +240,10 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
 
         long* gridPointPtr = grid_getPointRef(gridPtr, next.x, next.y, next.z);
         vector_pushBack(pointVectorPtr, (void*)gridPointPtr);
+        grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
-		grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
-
+				/*if (grid_isPointEmpty(gridPtr, next.x, next.y, next.z))
+					return NULL; */ /*Checks if crosses other path*/
 
         /* Check if we are done */
         if (next.value == 0) {
@@ -310,109 +311,103 @@ void* router_solve (void* argPtr){
     long bendCost = routerPtr->bendCost;
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
-	/*Thread management variables*/
-	pthread_mutex_t grid_lock, queue_lock, insert_lock;
-	if(pthread_mutex_init(&grid_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate thread.\n");
-		exit(1);
-	}
-	if(pthread_mutex_init(&queue_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate thread.\n");
-		exit(1);
-	}
-	if(pthread_mutex_init(&insert_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate thread.\n");
-		exit(1);
-	}
-
-
-	while (1) {
-
-		pair_t* coordinatePairPtr;
-
-		if (pthread_mutex_lock(&queue_lock)!=0) {
-			fprintf(stderr, "Failed to lock.\n");
+		/*Thread management variables*/
+		pthread_mutex_t grid_lock, queue_lock, insert_lock;
+		if(pthread_mutex_init(&grid_lock, NULL)!=0){
+			fprintf(stderr, "Failed to initiate thread.\n");
 			exit(1);
 		}
-
-		if (queue_isEmpty(workQueuePtr)) {
-			break;
-		} else {
-			coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-		}
-		if (pthread_mutex_unlock(&queue_lock)!=0) {
-			fprintf(stderr, "Failed to unlock.\n");
+		if(pthread_mutex_init(&queue_lock, NULL)!=0){
+			fprintf(stderr, "Failed to initiate thread.\n");
 			exit(1);
 		}
-
-		coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
-		coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
-
-		pair_free(coordinatePairPtr);
-
-		bool_t success = FALSE;
-		vector_t* pointVectorPtr = NULL;
+		if(pthread_mutex_init(&insert_lock, NULL)!=0){
+			fprintf(stderr, "Failed to initiate thread.\n");
+			exit(1);
+		}
 
 		while (1) {
-			printf("Grid copied by thread: %ld\n", pthread_self());
-			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 
-			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {
+				pair_t* coordinatePairPtr;
 
-				/*Only if expansion is successful does it need mutex*/
-				if (pthread_mutex_lock(&grid_lock)!=0) {
-					fprintf(stderr, "Failed to lock.\n");
+				if (pthread_mutex_lock(&queue_lock)!=0) {
+        	fprintf(stderr, "Failed to lock.\n");
+      	}
+
+				if (queue_isEmpty(workQueuePtr)) {
+						coordinatePairPtr = NULL;
+				} else {
+						coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
+				}
+				if (pthread_mutex_unlock(&queue_lock)!=0) {
+        	fprintf(stderr, "Failed to unlock.\n");
 					exit(1);
 				}
 
-				pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
-				grid_addPath(gridPtr, pointVectorPtr);
+				if (coordinatePairPtr == NULL) {
+						break;
+				}
+
+				coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
+				coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
+
+				pair_free(coordinatePairPtr);
+
+				bool_t success = FALSE;
+				vector_t* pointVectorPtr = NULL;
+
+				do {
+					printf("Grid copied by thread: %ld", pthread_self());
+					grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
+
+					if (pthread_mutex_lock(&grid_lock)!=0) {
+	        	fprintf(stderr, "Failed to lock.\n");
+					}
+
+					if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {
+							pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
+							if (pointVectorPtr) {
+									grid_addPath_Ptr(gridPtr, pointVectorPtr);
+									success = TRUE;
+									break;
+							}
+							else {
+								continue;
+							}
+					}
+					else{
+						break;
+					}
+				} while(1);
+
+				if (success) {
+						bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
+						assert(status);
+				}
 
 				if (pthread_mutex_unlock(&grid_lock)!=0) {
-					fprintf(stderr, "Failed to unlock.\n");
-					exit(1);
+        	fprintf(stderr, "Failed to unlock.\n");
 				}
 
-				if (pointVectorPtr) { /*grid_addPath altered to check validity*/
-					printf("Path added by thread: %ld\n", pthread_self());
-					success = TRUE;
-					break;
-
-				} else {
-					printf("Failed to traceback\n"); /*debug*/
-					continue;
-				}
-			} else{ /*Unable to do expansion, gives up on pair*/
-				break;
-			}
 		}
-
-		if (success) {
-			bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
-			assert(status);
-		}
-	}
-
-	/*
-     * Add thread paths to global list
+    /*
+     * Add my paths to global list
      */
-	if (pthread_mutex_lock(&insert_lock)!=0) {
-		fprintf(stderr, "Failed to lock.\n");
-  		exit(1);
-		}
+		if (pthread_mutex_lock(&insert_lock)!=0) {
+ 			fprintf(stderr, "Failed to lock.\n");
+ 		}
 
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 
-    grid_free(myGridPtr); /*how to do this if each grid is created by a thread?*/
+    grid_free(myGridPtr); // how to do this if each grid is created by a thread?
     queue_free(myExpansionQueuePtr);
 
-	if (pthread_mutex_unlock(&insert_lock)!=0) {
-		fprintf(stderr, "Failed to unlock.\n");
-      	exit(1);
-	}
+		if (pthread_mutex_unlock(&insert_lock)!=0) {
+			fprintf(stderr, "Failed to unlock.\n");
+		}
 
-	return 0;
+		return 0;
 }
 
 

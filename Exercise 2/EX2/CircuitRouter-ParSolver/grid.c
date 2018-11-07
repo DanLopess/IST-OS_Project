@@ -233,7 +233,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 
 	for (i = 1; i < (n-1); i++) {
 		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-		if (*gridPointPtr == GRID_POINT_FULL)
+		if (*gridPointPtr != GRID_POINT_EMPTY)
 			return FALSE;
 	}
 

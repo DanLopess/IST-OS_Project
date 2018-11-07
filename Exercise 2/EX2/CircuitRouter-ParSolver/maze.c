@@ -169,21 +169,21 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
     vector_t* wallVectorPtr = mazePtr->wallVectorPtr;
     vector_t* srcVectorPtr = mazePtr->srcVectorPtr;
     vector_t* dstVectorPtr = mazePtr->dstVectorPtr;
-    
+
     while (fgets(line, sizeof(line), inputFile)) {
-        
+
         char code;
         long x1, y1, z1;
         long x2, y2, z2;
         long numToken = sscanf(line, " %c %li %li %li %li %li %li",
                                &code, &x1, &y1, &z1, &x2, &y2, &z2);
-        
+
         lineNumber++;
-        
+
         if (numToken < 1) {
             continue;
         }
-        
+
         switch (code) {
             case '#': { /* comment */
                 /* ignore line */
@@ -235,10 +235,10 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
                 exit(1);
             }
         }
-        
+
     } /* iterate over lines in input file */
-    
-    
+
+
     /*
      * Initialize grid contents
      */
@@ -255,7 +255,7 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
     addToGrid(gridPtr, dstVectorPtr,  "destination");
     fprintf(fp, "Maze dimensions = %li x %li x %li\n", width, height, depth);
     fprintf(fp, "Paths to route  = %li\n", list_getSize(workListPtr));
-    
+
     /*
      * Initialize work queue
      */
@@ -267,7 +267,7 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
         queue_push(workQueuePtr, (void*)coordinatePairPtr);
     }
     list_free(workListPtr);
-    
+
     return vector_getSize(srcVectorPtr);
 }
 
@@ -349,7 +349,7 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, FILE *fp, bo
                 long z = currCoordinate.z;
                 if (grid_getPoint(testGridPtr, x, y, z) != GRID_POINT_EMPTY) {
                     grid_free(testGridPtr);
-                    return FALSE;
+                    return FALSE; /*DEBUG, Part of the verification failed*/
                 } else {
                     grid_setPoint(testGridPtr, x, y, z, id);
                 }

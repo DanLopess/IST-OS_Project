@@ -232,10 +232,25 @@ int main(int argc, char** argv){
     list_t* pathVectorListPtr = list_alloc(NULL);
     assert(pathVectorListPtr);
 
-    router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
     TIMER_T startTime;
     TIMER_READ(startTime);
 
+	/*Thread management variables*/
+	pthread_mutex_t grid_lock, queue_lock, insert_lock;
+	if(pthread_mutex_init(&grid_lock, NULL)!=0){
+		fprintf(stderr, "Failed to initiate mutex.\n");
+		exit(1);
+	}
+	if(pthread_mutex_init(&queue_lock, NULL)!=0){
+		fprintf(stderr, "Failed to initiate mutex.\n");
+		exit(1);
+	}
+	if(pthread_mutex_init(&insert_lock, NULL)!=0){
+		fprintf(stderr, "Failed to initiate mutex.\n");
+		exit(1);
+	}
+
+	router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr, &grid_lock, &queue_lock, &insert_lock};
     threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
 
     TIMER_T stopTime;
@@ -257,7 +272,7 @@ int main(int argc, char** argv){
      */
     assert(numPathRouted <= numPathToRoute);
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
-    assert(status == TRUE); /*This line causes a segfault*/
+    assert(status == TRUE);
     fputs("Verification passed.\n",resultFp);
     maze_free(mazePtr);
     router_free(routerPtr);

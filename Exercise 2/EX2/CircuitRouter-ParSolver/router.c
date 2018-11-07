@@ -336,13 +336,17 @@ void* router_solve (void* argPtr){
 		}
 
 		if (queue_isEmpty(workQueuePtr)) {
+			if (pthread_mutex_unlock(&queue_lock)!=0) {
+				fprintf(stderr, "Failed to unlock.\n");
+				exit(1);
+			}
 			break;
 		} else {
 			coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-		}
-		if (pthread_mutex_unlock(&queue_lock)!=0) {
-			fprintf(stderr, "Failed to unlock.\n");
-			exit(1);
+			if (pthread_mutex_unlock(&queue_lock)!=0) {
+				fprintf(stderr, "Failed to unlock.\n");
+				exit(1);
+			}
 		}
 
 		coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
@@ -354,7 +358,7 @@ void* router_solve (void* argPtr){
 		vector_t* pointVectorPtr = NULL;
 
 		while (1) {
-			printf("Grid copied by thread: %ld\n", pthread_self());
+			//printf("Grid copied by thread: %ld\n", pthread_self());
 			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 
 			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {
@@ -366,30 +370,26 @@ void* router_solve (void* argPtr){
 				}
 
 				pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
-				grid_addPath(gridPtr, pointVectorPtr);
+				success = grid_addPath_Ptr(gridPtr, pointVectorPtr);
 
 				if (pthread_mutex_unlock(&grid_lock)!=0) {
 					fprintf(stderr, "Failed to unlock.\n");
 					exit(1);
 				}
 
-				if (pointVectorPtr) { /*grid_addPath altered to check validity*/
-					printf("Path added by thread: %ld\n", pthread_self());
-					success = TRUE;
+				if (success) { /*grid_addPath altered to check validity*/
+					/*printf("Path added by thread: %ld\n", pthread_self());*/
+					bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
+					assert(status);
 					break;
 
 				} else {
-					printf("Failed to traceback\n"); /*debug*/
+					/*printf("Failed to traceback\n"); *//*debug*/
 					continue;
 				}
 			} else{ /*Unable to do expansion, gives up on pair*/
 				break;
 			}
-		}
-
-		if (success) {
-			bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
-			assert(status);
 		}
 	}
 

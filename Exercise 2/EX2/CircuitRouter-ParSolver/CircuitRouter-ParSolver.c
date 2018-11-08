@@ -266,10 +266,8 @@ int main(int argc, char** argv){
     fprintf(resultFp, "Paths routed    = %li\n", numPathRouted);
     fprintf(resultFp, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
 
+    /*Check solution and clean up */
 
-    /*
-     * Check solution and clean up
-     */
     assert(numPathRouted <= numPathToRoute);
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
     assert(status == TRUE);
@@ -277,6 +275,9 @@ int main(int argc, char** argv){
     maze_free(mazePtr);
     router_free(routerPtr);
     list_iter_reset(&it, pathVectorListPtr);
+
+	/*TODO pthread_mutex_exit*/
+
     while (list_iter_hasNext(&it, pathVectorListPtr)) {
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
         vector_t* v;

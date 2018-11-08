@@ -62,6 +62,7 @@
 #include "lib/list.h"
 #include "maze.h"
 #include "router.h"
+#include "lock.h"
 #include "lib/timer.h"
 #include "lib/types.h"
 
@@ -235,22 +236,9 @@ int main(int argc, char** argv){
     TIMER_T startTime;
     TIMER_READ(startTime);
 
-	/*Thread management variables*/
-	pthread_mutex_t grid_lock, queue_lock, insert_lock;
-	if(pthread_mutex_init(&grid_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate mutex.\n");
-		exit(1);
-	}
-	if(pthread_mutex_init(&queue_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate mutex.\n");
-		exit(1);
-	}
-	if(pthread_mutex_init(&insert_lock, NULL)!=0){
-		fprintf(stderr, "Failed to initiate mutex.\n");
-		exit(1);
-	}
+	lock_init(); /*Initializes all necessary locks*/
 
-	router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr, &grid_lock, &queue_lock, &insert_lock};
+	router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
     threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
 
     TIMER_T stopTime;

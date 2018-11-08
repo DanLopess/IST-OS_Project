@@ -1,21 +1,20 @@
 #ifndef LOCK_H
 #define LOCK_H 1
 
-pthread_mutex_t grid_lock, queue_lock, insert_lock;
 
 void lock_init();
 
-void grid_lock();
+void lock_grid();
 
-void grid_unlock();
+void unlock_grid();
 
-void queue_lock();
+void lock_queue();
 
-void queue_unlock();
+void unlock_queue();
 
-void insert_lock();
+void lock_insert();
 
-void insert_unlock();
+void unlock_insert();
 
 
 #endif

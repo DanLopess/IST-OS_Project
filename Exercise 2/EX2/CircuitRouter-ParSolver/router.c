@@ -297,44 +297,44 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
  * =============================================================================
  */
 void* router_solve (void* argPtr){
-    router_solve_arg_t* routerArgPtr = (router_solve_arg_t*)argPtr;
-    router_t* routerPtr = routerArgPtr->routerPtr;
-    maze_t* mazePtr = routerArgPtr->mazePtr;
-    vector_t* myPathVectorPtr = vector_alloc(1);
-    assert(myPathVectorPtr);
-    queue_t* workQueuePtr = mazePtr->workQueuePtr;
+	router_solve_arg_t* routerArgPtr = (router_solve_arg_t*)argPtr;
+	router_t* routerPtr = routerArgPtr->routerPtr;
+	maze_t* mazePtr = routerArgPtr->mazePtr;
+	vector_t* myPathVectorPtr = vector_alloc(1);
+	assert(myPathVectorPtr);
+	queue_t* workQueuePtr = mazePtr->workQueuePtr;
 
-    grid_t* gridPtr = mazePtr->gridPtr;
-    grid_t* myGridPtr = grid_alloc(gridPtr->width, gridPtr->height, gridPtr->depth);
-    assert(myGridPtr);
-    long bendCost = routerPtr->bendCost;
-    queue_t* myExpansionQueuePtr = queue_alloc(-1);
+	grid_t* gridPtr = mazePtr->gridPtr;
+	grid_t* myGridPtr = grid_alloc(gridPtr->width, gridPtr->height, gridPtr->depth);
+	assert(myGridPtr);
+	long bendCost = routerPtr->bendCost;
+	queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
-		while (1) {
-			pair_t* coordinatePairPtr;
+	while (1) {
+		pair_t* coordinatePairPtr;
 
-			lock_queue();
+		lock_queue();
 
-			if (queue_isEmpty(workQueuePtr)) {
-				coordinatePairPtr = NULL;
-			} else {
-				coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-			}
+		if (queue_isEmpty(workQueuePtr)) {
+			coordinatePairPtr = NULL;
+		} else {
+			coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
+		}
 
-			unlock_queue();
-			
-			if (coordinatePairPtr == NULL)
-				break; /*No more tasks from queue*/
+		unlock_queue();
 
-			coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
-			coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
+		if (coordinatePairPtr == NULL)
+			break; /*No more tasks from queue*/
 
-			pair_free(coordinatePairPtr);
+		coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
+		coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
 
-			bool_t success = FALSE;
-			vector_t* pointVectorPtr = NULL;
+		pair_free(coordinatePairPtr);
 
-			while (!success) {
+		bool_t success = FALSE;
+		vector_t* pointVectorPtr = NULL;
+
+		while (!success) {
 			//printf("Grid copied by thread: %ld\n", pthread_self());
 			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 

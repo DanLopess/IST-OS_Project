@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "grid.h"
 
 
 pthread_mutex_t grid_lock;
@@ -13,9 +14,7 @@ pthread_mutex_t insert_lock;
 */
 void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
-	locks = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t)*gridSize);
 	int i;
-	int
 
 	for (i = 0; i < gridSize; i++) {
 		if(pthread_mutex_init(&gridPtr->mutexes[i], NULL)!=0){

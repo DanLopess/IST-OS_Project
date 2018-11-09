@@ -61,6 +61,8 @@
 #include "grid.h"
 #include "lib/types.h"
 #include "lib/vector.h"
+#include <pthread.h>
+#include "lock.h"
 
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
@@ -231,6 +233,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long n = vector_getSize(pointVectorPtr);
 
 /*
+WAYS OF SOLVING THIS
 1. create array with copy of mutexes related to a given coordinate in the path
 and sort the mutexes based in left to right , up to down
 2. while locking each coordinate in the path, if 2 threads stop in the same position

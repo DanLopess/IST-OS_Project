@@ -57,6 +57,8 @@
 #include <stdio.h>
 #include "lib/types.h"
 #include "lib/vector.h"
+#include <pthread.h>
+
 
 
 typedef struct grid {

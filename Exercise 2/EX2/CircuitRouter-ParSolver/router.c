@@ -59,8 +59,6 @@
 #include "router.h"
 #include "lib/vector.h"
 #include "lock.h"
-#include <unistd.h>
-#include <pthread.h>
 
 
 typedef enum momentum {
@@ -241,7 +239,9 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
 
         long* gridPointPtr = grid_getPointRef(gridPtr, next.x, next.y, next.z);
         vector_pushBack(pointVectorPtr, (void*)gridPointPtr);
-				grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
+        grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
+
+		printf("%ld\t", gridPointPtr- gridPtr->points);
 
         /* Check if we are done */
         if (next.value == 0) {
@@ -286,10 +286,10 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
             }
         }
     }
+	putchar('\n');
 
     return pointVectorPtr;
 }
-
 
 
 /* =============================================================================
@@ -332,9 +332,9 @@ void* router_solve (void* argPtr){
 		pair_free(coordinatePairPtr);
 
 		bool_t success = FALSE;
-		vector_t* pointVectorPtr = NULL;
 
 		while (!success) {
+			vector_t* pointVectorPtr = NULL;
 			//printf("Grid copied by thread: %ld\n", pthread_self());
 			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 
@@ -351,6 +351,7 @@ void* router_solve (void* argPtr){
 						assert(status);
 						break;
 					}
+					vector_free(pointVectorPtr);
 				}
 			} else{  /*Unable to do expansion, gives up on pair*/
 				break;

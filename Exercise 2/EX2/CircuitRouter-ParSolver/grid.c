@@ -198,29 +198,18 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
  * grid_addPath
  * =============================================================================
  */
-bool_t grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
-    long i;
-    long n = vector_getSize(pointVectorPtr);
+ void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
+     long i;
+     long n = vector_getSize(pointVectorPtr);
 
-	for (i = 1; i < (n-1); i++) {
-		coordinate_t* coordinatePtr = (coordinate_t*)vector_at(pointVectorPtr, i);
-		long x = coordinatePtr->x;
-		long y = coordinatePtr->y;
-		long z = coordinatePtr->z;
-		if (grid_isPointFull(gridPtr, x, y, z)) {
-			return FALSE;
-		}
-	}
-
-    for (i = 1; i < (n-1); i++) {
-        coordinate_t* coordinatePtr = (coordinate_t*)vector_at(pointVectorPtr, i);
-        long x = coordinatePtr->x;
-        long y = coordinatePtr->y;
-        long z = coordinatePtr->z;
-        grid_setPoint(gridPtr, x, y, z, GRID_POINT_FULL);
-    }
-	return TRUE;
-}
+     for (i = 0; i < n; i++) {
+         coordinate_t* coordinatePtr = (coordinate_t*)vector_at(pointVectorPtr, i);
+         long x = coordinatePtr->x;
+         long y = coordinatePtr->y;
+         long z = coordinatePtr->z;
+         grid_setPoint(gridPtr, x, y, z, GRID_POINT_FULL);
+     }
+ }
 
 
 /* =============================================================================
@@ -241,6 +230,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL;
     }
+	putchar('\n');
 	return TRUE;
 }
 

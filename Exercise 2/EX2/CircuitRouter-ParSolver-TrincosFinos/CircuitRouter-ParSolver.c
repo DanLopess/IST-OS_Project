@@ -214,29 +214,29 @@ FILE * outputFile() {
  * =============================================================================
  */
 int main(int argc, char** argv){
-    /*
-     * Initialization
-     */
-    parseArgs(argc, argv);
-    FILE* resultFp = outputFile();
-    maze_t* mazePtr = maze_alloc();
-    assert(mazePtr);
-    long numPathToRoute = maze_read(mazePtr, global_inputFile, resultFp);
-    router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
-                                       global_params[PARAM_YCOST],
-                                       global_params[PARAM_ZCOST],
-                                       global_params[PARAM_BENDCOST]);
-    assert(routerPtr);
-    list_t* pathVectorListPtr = list_alloc(NULL);
-    assert(pathVectorListPtr);
+		/*
+		 * Initialization
+		 */
+		parseArgs(argc, argv);
+		FILE* resultFp = outputFile();
+		maze_t* mazePtr = maze_alloc();
+		assert(mazePtr);
+		long numPathToRoute = maze_read(mazePtr, global_inputFile, resultFp);
+		router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
+		                                   global_params[PARAM_YCOST],
+		                                   global_params[PARAM_ZCOST],
+		                                   global_params[PARAM_BENDCOST]);
+		assert(routerPtr);
+		list_t* pathVectorListPtr = list_alloc(NULL);
+		assert(pathVectorListPtr);
 
-    TIMER_T startTime;
-    TIMER_READ(startTime);
+		TIMER_T startTime;
+		TIMER_READ(startTime);
 
-	lock_init(mazePtr->gridPtr); /*Initializes all necessary mutexes*/
+		lock_init(mazePtr->gridPtr); /*Initializes all necessary mutexes*/
 
-	router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
-    threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
+		router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
+		threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/
 
     TIMER_T stopTime;
     TIMER_READ(stopTime);

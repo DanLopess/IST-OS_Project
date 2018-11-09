@@ -241,7 +241,7 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
 
         long* gridPointPtr = grid_getPointRef(gridPtr, next.x, next.y, next.z);
         vector_pushBack(pointVectorPtr, (void*)gridPointPtr);
-		grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
+				grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
         /* Check if we are done */
         if (next.value == 0) {
@@ -309,7 +309,8 @@ void* router_solve (void* argPtr){
     assert(myGridPtr);
     long bendCost = routerPtr->bendCost;
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
-	while (1) {
+
+		while (1) {
 
 		pair_t* coordinatePairPtr;
 
@@ -361,11 +362,11 @@ void* router_solve (void* argPtr){
 	list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
 
 	lock_insert();
-    list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
+  list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 	unlock_insert();
 
-    grid_free(myGridPtr);
-    queue_free(myExpansionQueuePtr);
+  grid_free(myGridPtr);
+  queue_free(myExpansionQueuePtr);
 
 	return 0;
 }

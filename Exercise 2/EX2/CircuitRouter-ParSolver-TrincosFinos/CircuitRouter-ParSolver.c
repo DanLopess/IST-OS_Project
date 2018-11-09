@@ -197,9 +197,6 @@ FILE * outputFile() {
 			 fprintf(stderr, "Failed to create thread.\n");
 			 exit(1);
 		 }
-		 else{
-			 printf("Created thread: %ld\n", tid[i]); /*For debugging purposes DELETE THIS */
-		 }
 	 }
 	 for(i = 0; i < NUMTHREADS; i++){
 		 /*awaits for threads to finish and free tid in the end. */

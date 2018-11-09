@@ -241,8 +241,6 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
         vector_pushBack(pointVectorPtr, (void*)gridPointPtr);
         grid_setPoint(myGridPtr, next.x, next.y, next.z, GRID_POINT_FULL);
 
-		printf("%ld\t", gridPointPtr- gridPtr->points);
-
         /* Check if we are done */
         if (next.value == 0) {
             break;
@@ -286,7 +284,6 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
             }
         }
     }
-	putchar('\n');
 
     return pointVectorPtr;
 }
@@ -335,7 +332,6 @@ void* router_solve (void* argPtr){
 
 		while (!success) {
 			vector_t* pointVectorPtr = NULL;
-			//printf("Grid copied by thread: %ld\n", pthread_self());
 			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 
 			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {

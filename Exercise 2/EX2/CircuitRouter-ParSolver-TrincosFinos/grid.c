@@ -235,6 +235,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 and sort the mutexes based in left to right , up to down
 2. while locking each coordinate in the path, if 2 threads stop in the same position
 then both should backoff and wait (time depends on the OS) until one can pass through
+(trylock if it cant lock then it goes back to the beggining waits and tries again)
 */
 
 	for (i = 1; i < (n-1); i++) {

@@ -85,6 +85,8 @@ grid_t* grid_alloc (long width, long height, long depth){
         gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
                                           & ~(CACHE_LINE_SIZE-1)))
                                   + CACHE_LINE_SIZE);
+				gridPtr->mutexes = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t)*n);
+
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
     }
 
@@ -139,6 +141,13 @@ long* grid_getPointRef (grid_t* gridPtr, long x, long y, long z){
     return &(gridPtr->points[(z * gridPtr->height + y) * gridPtr->width + x]);
 }
 
+/* =============================================================================
+ * grid_getMutexRef
+ * =============================================================================
+ */
+ pthread_mutex_t* grid_getMutexRef (grid_t* gridPtr, long x, long y, long z){
+     return &(gridPtr->mutexes[(z * gridPtr->height + y) * gridPtr->width + x]);
+ }
 
 /* =============================================================================
  * grid_getPointIndices

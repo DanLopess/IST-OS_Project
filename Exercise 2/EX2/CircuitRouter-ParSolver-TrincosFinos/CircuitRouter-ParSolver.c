@@ -233,7 +233,7 @@ int main(int argc, char** argv){
     TIMER_T startTime;
     TIMER_READ(startTime);
 
-	lock_init(); /*Initializes all necessary locks*/
+	lock_init(mazePtr->gridPtr); /*Initializes all necessary mutexes*/
 
 	router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
     threadCreate((void *)&routerArg); /* Creates threads and each one executes router_solve*/

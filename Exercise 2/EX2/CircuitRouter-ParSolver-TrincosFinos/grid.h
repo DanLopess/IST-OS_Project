@@ -65,6 +65,7 @@ typedef struct grid {
     long depth;
     long* points;
     long* points_unaligned;
+		pthread_mutex_t* mutexes;
 } grid_t;
 
 enum {
@@ -107,6 +108,12 @@ bool_t grid_isPointValid (grid_t* gridPtr, long x, long y, long z);
  */
 long* grid_getPointRef (grid_t* gridPtr, long x, long y, long z);
 
+
+/* =============================================================================
+ * grid_getMutexRef
+ * =============================================================================
+ */
+ pthread_mutex_t* grid_getMutexRef (grid_t* gridPtr, long x, long y, long z);
 
 /* =============================================================================
  * grid_getPointIndices

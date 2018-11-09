@@ -4,11 +4,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 pthread_mutex_t grid_lock;
 pthread_mutex_t queue_lock;
 pthread_mutex_t insert_lock;
+/*
+ * lock_init Initializes all mutexes used in the program
+*/
+void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
+	locks = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t)*gridSize);
+	int i;
+	int
 
-void lock_init() {
+	for (i = 0; i < gridSize; i++) {
+		if(pthread_mutex_init(&gridPtr->mutexes[i], NULL)!=0){
+			fprintf(stderr, "Failed to initiate mutex.\n");
+			exit(1);
+		}
+	}
+
 	if(pthread_mutex_init(&grid_lock, NULL)!=0){
 		fprintf(stderr, "Failed to initiate mutex.\n");
 		exit(1);

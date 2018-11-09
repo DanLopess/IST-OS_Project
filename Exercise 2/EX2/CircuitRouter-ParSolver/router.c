@@ -311,30 +311,30 @@ void* router_solve (void* argPtr){
     queue_t* myExpansionQueuePtr = queue_alloc(-1);
 
 		while (1) {
+			pair_t* coordinatePairPtr;
 
-		pair_t* coordinatePairPtr;
+			lock_queue();
 
-		lock_queue();
+			if (queue_isEmpty(workQueuePtr)) {
+				coordinatePairPtr = NULL;
+			} else {
+				coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
+			}
 
-		if (queue_isEmpty(workQueuePtr)) {
-			coordinatePairPtr = NULL;
-		} else {
-			coordinatePairPtr = (pair_t*)queue_pop(workQueuePtr);
-		}
+			unlock_queue();
+			
+			if (coordinatePairPtr == NULL)
+				break; /*No more tasks from queue*/
 
-		unlock_queue();
-		if (coordinatePairPtr == NULL)
-			break; /*No more tasks from queue*/
+			coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
+			coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
 
-		coordinate_t* srcPtr = coordinatePairPtr->firstPtr;
-		coordinate_t* dstPtr = coordinatePairPtr->secondPtr;
+			pair_free(coordinatePairPtr);
 
-		pair_free(coordinatePairPtr);
+			bool_t success = FALSE;
+			vector_t* pointVectorPtr = NULL;
 
-		bool_t success = FALSE;
-		vector_t* pointVectorPtr = NULL;
-
-		while (!success) {
+			while (!success) {
 			//printf("Grid copied by thread: %ld\n", pthread_self());
 			grid_copy(myGridPtr, gridPtr); /* create private copy of the grid*/
 
@@ -362,11 +362,11 @@ void* router_solve (void* argPtr){
 	list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
 
 	lock_insert();
-  list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
+	list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 	unlock_insert();
 
-  grid_free(myGridPtr);
-  queue_free(myExpansionQueuePtr);
+	grid_free(myGridPtr);
+	queue_free(myExpansionQueuePtr);
 
 	return 0;
 }

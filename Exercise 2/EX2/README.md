@@ -31,7 +31,7 @@ EX2
 	├── router.c
 	├── router.h
 ├── CircuitRouter-SeqSolver
-	├──	CircuitRouter-SeqSolver.c
+	├── CircuitRouter-SeqSolver.c
 	├── coordinate.c
 	├── coordinate.h
 	├── grid.c

@@ -67,7 +67,7 @@ typedef struct grid {
     long depth;
     long* points;
     long* points_unaligned;
-		pthread_mutex_t* mutexes;
+		pthread_mutex_t** mutexes;
 } grid_t;
 
 enum {

@@ -17,7 +17,7 @@ void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 	int i;
 
 	for (i = 0; i < gridSize; i++) {
-		if(pthread_mutex_init(&gridPtr->mutexes[i], NULL)!=0){
+		if(pthread_mutex_init(gridPtr->mutexes[i], NULL)!=0){
 			fprintf(stderr, "Failed to initiate mutex.\n");
 			exit(1);
 		}
@@ -37,20 +37,6 @@ void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 	}
 }
 
-void lock_grid() {
-	if (pthread_mutex_lock(&grid_lock)!=0) {
-		fprintf(stderr, "Failed to lock.\n");
-		exit(1);
-	}
-}
-
-void unlock_grid() {
-	if (pthread_mutex_unlock(&grid_lock)!=0) {
-		fprintf(stderr, "Failed to lock.\n");
-		exit(1);
-	}
-}
-
 void lock_queue() {
 	if (pthread_mutex_lock(&queue_lock)!=0) {
 		fprintf(stderr, "Failed to lock.\n");
@@ -60,7 +46,7 @@ void lock_queue() {
 
 void unlock_queue() {
 	if (pthread_mutex_unlock(&queue_lock)!=0) {
-		fprintf(stderr, "Failed to lock.\n");
+		fprintf(stderr, "Failed to unlock.\n");
 		exit(1);
 	}
 }
@@ -74,7 +60,7 @@ void lock_insert() {
 
 void unlock_insert() {
 	if (pthread_mutex_unlock(&insert_lock)!=0) {
-		fprintf(stderr, "Failed to lock.\n");
+		fprintf(stderr, "Failed to unlock.\n");
 		exit(1);
 	}
 }

@@ -91,7 +91,7 @@ grid_t* grid_alloc (long width, long height, long depth){
         gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
                                           & ~(CACHE_LINE_SIZE-1)))
                                   + CACHE_LINE_SIZE);
-				gridPtr->mutexes = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t)*n);
+				gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
 				lock_init(gridPtr); /*Initializes all necessary mutexes*/
 
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
@@ -153,7 +153,7 @@ long* grid_getPointRef (grid_t* gridPtr, long x, long y, long z){
  * =============================================================================
  */
  pthread_mutex_t* grid_getMutexRef (grid_t* gridPtr, long x, long y, long z){
-     return &(gridPtr->mutexes[(z * gridPtr->height + y) * gridPtr->width + x]);
+     return gridPtr->mutexes[(z * gridPtr->height + y) * gridPtr->width + x];
  }
 
 /* =============================================================================
@@ -235,33 +235,43 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
 bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
-		long nPoints = gridPtr->width*gridPtr->height*gridPtr->depth;
-		coordinate_t* pathPointsCoordinates; /* sorted in the same order as pointVectorPtr*/
-		int size = (int)(sizeof(pathPointsCoordinates)/sizeof(coordinate_t);
 		useconds_t delay = STARTDELAY; /* Delay in usec */
+		pthread_mutex_t** locks = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
 
-		for (i = 0; i < size; i++) {
-			coordinate_t c = pathPointsCoordinates[i];
-			pthread_mutex_t lock = grid_getMutexRef(gridPtr, c->x,c->y,c->z);
+		/* get all locks */
+		for (i = 0; i < n; i++) {
+			long* xPtr = (long*) malloc(sizeof(long));
+			long* yPtr = (long*) malloc(sizeof(long));
+			long* zPtr = (long*) malloc(sizeof(long));
+			long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+			grid_getPointIndices (gridPtr, gridPointPtr, xPtr, yPtr, zPtr);
+			locks[i] = grid_getMutexRef(gridPtr, *xPtr,*yPtr,*zPtr);
+			free(xPtr);
+			free(yPtr);
+			free(zPtr);
+		}
 
-			if (pthread_mutex_trylock(&lock)==0) {
+		for (i = 0; i < n; i++) {
+			printf("entered forloop\n");
+			exit(1);
+			if (pthread_mutex_trylock(locks[i])==0) {
 				long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
 				if (*gridPointPtr != GRID_POINT_EMPTY)
 					return FALSE;
+				printf("managed to lock\n");
+				exit(1);
 			}
 			else {
 				int f;
 
 				for (f = i-1; f>=0; f--) { /* undoes everything and waits */
-					coordinate_t c = pathPointsCoordinates[i];
-					pthread_mutex_t lock = grid_getMutexRef(gridPtr, c->x,c->y,c->z);
-					if (pthread_mutex_unlock(&lock)!=0) { /* unlocks previous locked mutexes*/
-						fprintf(stderr, "Failed to initiate mutex.\n");
+					if (pthread_mutex_unlock(locks[f])!=0) { /* unlocks previous locked mutexes*/
+						fprintf(stderr, "Failed to unlock mutex.\n");
 						exit(1);
 					}
 				}
 				usleep(delay); /* sleeps for 'delay' nanoseconds until it can start again */
-		    if (delay < MAX_DELAY) {
+		    if (delay < MAXDELAY) {
 		        delay *= 2;
 		    } else {
 					delay = STARTDELAY;
@@ -277,7 +287,19 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL;
     }
-	return TRUE;
+
+		/* Unlocks everything now */
+		for (i = 0; i<n; i++) { /* undoes everything and waits */
+			if (pthread_mutex_unlock(locks[i])!=0) { /* unlocks previous locked mutexes*/
+				fprintf(stderr, "Failed to unlock mutex.\n");
+				exit(1);
+			}
+		}
+
+		/* free mutexes vector */
+		free(locks);
+
+		return TRUE;
 }
 
 

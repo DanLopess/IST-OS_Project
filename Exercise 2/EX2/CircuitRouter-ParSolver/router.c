@@ -337,10 +337,8 @@ void* router_solve (void* argPtr){
 			if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr, srcPtr, dstPtr)) {
 				if ((pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost)) != NULL) {
 
-					/*Only if expansion is successful does it need mutex*/
-					lock_grid();
+					/* Tries to add to grid with maximum parallelism (each coordinate locked)*/
 					success = grid_addPath_Ptr(gridPtr, pointVectorPtr);
-					unlock_grid();
 
 					if (success) { /*grid_addPath altered to check validity*/
 						bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);

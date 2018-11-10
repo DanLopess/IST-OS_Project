@@ -71,7 +71,23 @@ EX2
 └── results
 `
 
-ii) os passos para compilar e executar o projecto por linha de comando ou pelo doTest.sh, iii)
+### How to compile
+`
+- 1: open bash shell (terminal)
+- 2: write cd EX2 (root_directory path)
+- 3: write "make"
+- 4a (command line):
+		- write cd CircuitRouter-ParSolver
+		- write "./CircuitRouter-ParSolver -t $(numberOfThreads) $inputFileName"
+		- write cd ..
+- 4b (doTest.sh):   
+		- write "./doTest.sh $(numberOfThreads) $inputFileName"
+		Note: Results output will be created into results folder
+- 5: write "make clean"
+- 6: close bash shell
+`
+
+iii)
 uma descri¸c˜ao das carater´ısticas do processador e sistema operativo usado pelo testes (i.e., n´umero
 de cores, clock rate e modelo), que poder˜ao ser obtidas, respectivamente, usando os comandos i)
 cat /proc/cpuinfo e ii) uname -a

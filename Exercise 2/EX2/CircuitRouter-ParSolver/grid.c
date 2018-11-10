@@ -63,9 +63,13 @@
 #include "lib/vector.h"
 #include <pthread.h>
 #include "lock.h"
+#include <unistd.h>
 
+#define STARTDELAY 50
+#define MAXDELAY 10000
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
+
 
 
 /* =============================================================================
@@ -231,28 +235,45 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
 bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
+		long nPoints = gridPtr->width*gridPtr->height*gridPtr->depth;
+		coordinate_t* pathPointsCoordinates; /* sorted in the same order as pointVectorPtr*/
+		int size = (int)(sizeof(pathPointsCoordinates)/sizeof(coordinate_t);
+		useconds_t delay = STARTDELAY; /* Delay in usec */
 
-/*
-WAYS OF SOLVING THIS
-1. create array with copy of mutexes related to a given coordinate in the path
-and sort the mutexes based in left to right , up to down
+		for (i = 0; i < size; i++) {
+			coordinate_t c = pathPointsCoordinates[i];
+			pthread_mutex_t lock = grid_getMutexRef(gridPtr, c->x,c->y,c->z);
 
-2. while locking each coordinate in the path, if 2 threads stop in the same position
-then both should backoff and wait (time depends on the OS) until one can pass through
-(trylock if it cant lock then it goes back to the beggining waits and tries again)
-nanosleep (exponential backoff and linear backoff) and check which time is better
-*/
-	for (i = 1; i < (n-1); i++) {
-		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-	}
+			if (pthread_mutex_trylock(&lock)==0) {
+				long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+				if (*gridPointPtr != GRID_POINT_EMPTY)
+					return FALSE;
+			}
+			else {
+				int f;
 
-	for (i = 1; i < (n-1); i++) {
-		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-		if (*gridPointPtr != GRID_POINT_EMPTY)
-			return FALSE;
-	}
+				for (f = i-1; f>=0; f--) { /* undoes everything and waits */
+					coordinate_t c = pathPointsCoordinates[i];
+					pthread_mutex_t lock = grid_getMutexRef(gridPtr, c->x,c->y,c->z);
+					if (pthread_mutex_unlock(&lock)!=0) { /* unlocks previous locked mutexes*/
+						fprintf(stderr, "Failed to initiate mutex.\n");
+						exit(1);
+					}
+				}
+				usleep(delay); /* sleeps for 'delay' nanoseconds until it can start again */
+		    if (delay < MAX_DELAY) {
+		        delay *= 2;
+		    } else {
+					delay = STARTDELAY;
+				}
 
-    for (i = 1; i < (n-1); i++) {
+				/* Retries from index 0 */
+				i = -1; /* -1 because of i++ */
+				continue;
+			}
+		}
+
+    for (i = 1; i < (n-1); i++) { /* all coordinates have been locked, it can write now*/
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL;
     }

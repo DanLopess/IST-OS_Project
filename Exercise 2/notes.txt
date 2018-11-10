@@ -30,3 +30,16 @@ Locks:
   rwlock      pthread_rwlock (pode retornar erro)
   "recursive" Mutex pthread_mutex + pthread_mutex_recursive
   "recursive" rwlock pthread_rwlock + ''
+
+
+
+	/*
+	WAYS OF SOLVING THIS
+	1. create array with copy of mutexes related to a given coordinate in the path
+	and sort the mutexes based in left to right , up to down
+
+	2. while locking each coordinate in the path, if 2 threads stop in the same position
+	then both should backoff and wait (time depends on the OS) until one can pass through
+	(trylock if it cant lock then it goes back to the beggining waits and tries again)
+	nanosleep (exponential backoff and linear backoff) and check which time is better
+	*/

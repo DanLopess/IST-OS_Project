@@ -61,6 +61,8 @@
 #include "grid.h"
 #include "lib/types.h"
 #include "lib/vector.h"
+#include <pthread.h>
+#include "lock.h"
 
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
@@ -85,6 +87,9 @@ grid_t* grid_alloc (long width, long height, long depth){
         gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
                                           & ~(CACHE_LINE_SIZE-1)))
                                   + CACHE_LINE_SIZE);
+				gridPtr->mutexes = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t)*n);
+				lock_init(gridPtr); /*Initializes all necessary mutexes*/
+
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
     }
 
@@ -139,6 +144,13 @@ long* grid_getPointRef (grid_t* gridPtr, long x, long y, long z){
     return &(gridPtr->points[(z * gridPtr->height + y) * gridPtr->width + x]);
 }
 
+/* =============================================================================
+ * grid_getMutexRef
+ * =============================================================================
+ */
+ pthread_mutex_t* grid_getMutexRef (grid_t* gridPtr, long x, long y, long z){
+     return &(gridPtr->mutexes[(z * gridPtr->height + y) * gridPtr->width + x]);
+ }
 
 /* =============================================================================
  * grid_getPointIndices
@@ -219,6 +231,17 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
 bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
+
+/*
+WAYS OF SOLVING THIS
+1. create array with copy of mutexes related to a given coordinate in the path
+and sort the mutexes based in left to right , up to down
+
+2. while locking each coordinate in the path, if 2 threads stop in the same position
+then both should backoff and wait (time depends on the OS) until one can pass through
+(trylock if it cant lock then it goes back to the beggining waits and tries again)
+nanosleep (exponential backoff and linear backoff) and check which time is better
+*/
 
 	for (i = 1; i < (n-1); i++) {
 		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);

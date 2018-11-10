@@ -1,8 +1,10 @@
 #ifndef LOCK_H
 #define LOCK_H 1
 
+#include "grid.h"
 
-void lock_init();
+
+void lock_init(grid_t* gridPtr);
 
 void lock_grid();
 

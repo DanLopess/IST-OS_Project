@@ -18,8 +18,8 @@ EX2
 ├── Makefile
 ├── README.md
 ├── CircuitRouter-ParSolver
-├── CircuitRouter-ParSolver.c
-├── coordinate.c
+	├── CircuitRouter-ParSolver.c
+	├── coordinate.c
 	├── coordinate.h
 	├── grid.c
 	├── grid.h

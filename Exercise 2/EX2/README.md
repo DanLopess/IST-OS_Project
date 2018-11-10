@@ -9,6 +9,7 @@ This exercise has both a CircuitRouter-ParSolver and a CircuitRouter-SeqSolver f
 
 ### Version 2.0
 - One mutex per grid coordinate has been implemented
+- Solution: exponential backoff
 - Program is working and a good speedup has been achieved
 
 ### Directories structure
@@ -87,7 +88,21 @@ EX2
 - 6: close bash shell
 `
 
-iii)
-uma descri¸c˜ao das carater´ısticas do processador e sistema operativo usado pelo testes (i.e., n´umero
-de cores, clock rate e modelo), que poder˜ao ser obtidas, respectivamente, usando os comandos i)
+### Testing
+All testing was performed and executed in the machine whose specs are down below.
+
+### Specs
+- Operating System
+Fedora 29 Workstation
+...
+
+- Hardware
+Model: AMD Ryzen™ 7 1700X
+Core count: 8cores
+Clock rate: 3.85Ghz (Overclocked)
+...
+
+NOTE: get a more specified information on operating system
+
+usando os comandos i)
 cat /proc/cpuinfo e ii) uname -a

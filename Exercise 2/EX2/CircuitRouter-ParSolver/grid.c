@@ -242,6 +242,9 @@ then both should backoff and wait (time depends on the OS) until one can pass th
 (trylock if it cant lock then it goes back to the beggining waits and tries again)
 nanosleep (exponential backoff and linear backoff) and check which time is better
 */
+	for (i = 1; i < (n-1); i++) {
+		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+	}
 
 	for (i = 1; i < (n-1); i++) {
 		long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);

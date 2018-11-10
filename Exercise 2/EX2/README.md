@@ -13,15 +13,22 @@ This exercise has both a CircuitRouter-ParSolver and a CircuitRouter-SeqSolver f
 
 ### Directories structure
 `
-.EX2
+.
+    ├── ...
+    ├── test                    # Test files (alternatively `spec` or `tests`)
+    │   ├── benchmarks          # Load and stress tests
+    │   ├── integration         # End-to-end, integration tests (alternatively `e2e`)
+    │   └── unit                # Unit tests
+    └── ...
+.
 ├── doTest.sh
 ├── Makefile
 ├── README.md
 ├── CircuitRouter-ParSolver
 ├── CircuitRouter-ParSolver.c
-	├── coordinate.c
-	├── coordinate.h
-	├── grid.c
+├── coordinate.c
+   ├── coordinate.h
+   ├── grid.c
 	├── grid.h
 	├── lock.c
 	├── lock.h

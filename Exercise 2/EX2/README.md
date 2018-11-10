@@ -12,7 +12,7 @@ This exercise has both a CircuitRouter-ParSolver and a CircuitRouter-SeqSolver f
 - Program is working and a good speedup has been achieved
 
 ### Directories structure
-
+`
 .EX2
 ├── doTest.sh
 ├── Makefile
@@ -69,7 +69,7 @@ This exercise has both a CircuitRouter-ParSolver and a CircuitRouter-SeqSolver f
 		├── vector.c
 		├── vector.h
 ├── results
-
+`
 
 ii) os passos para compilar e executar o projecto por linha de comando ou pelo doTest.sh, iii)
 uma descri¸c˜ao das carater´ısticas do processador e sistema operativo usado pelo testes (i.e., n´umero

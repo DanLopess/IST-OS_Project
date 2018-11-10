@@ -13,11 +13,11 @@ This exercise has both a CircuitRouter-ParSolver and a CircuitRouter-SeqSolver f
 
 
 ### Directories structure
-+---EX2
-|		|		doTest.sh
-|		|		Makefile
-|		|		README.md
-|		|		
++---EX2\n
+|		|		doTest.sh\n
+|		|		Makefile\n
+|		|		README.md\n
+|		|		\n
 |		+---CircuitRouter-ParSolver
 |		|				CircuitRouter-ParSolver.c
 |		|				coordinate.c

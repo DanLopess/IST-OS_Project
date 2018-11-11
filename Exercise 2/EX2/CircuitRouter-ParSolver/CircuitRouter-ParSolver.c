@@ -254,6 +254,7 @@ int main(int argc, char** argv){
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
     assert(status == TRUE);
     fputs("Verification passed.\n",resultFp);
+		
     maze_free(mazePtr);
     router_free(routerPtr);
     list_iter_reset(&it, pathVectorListPtr);

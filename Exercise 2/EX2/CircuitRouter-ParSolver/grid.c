@@ -92,6 +92,7 @@ grid_t* grid_alloc (long width, long height, long depth){
                                           & ~(CACHE_LINE_SIZE-1)))
                                   + CACHE_LINE_SIZE);
 				gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
+				lock_alloc(gridPtr); /* allocates each individual mutex */ // TODO IS THIS NEEDED????????
 				lock_init(gridPtr); /*Initializes all necessary mutexes*/
 
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));

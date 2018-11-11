@@ -95,6 +95,7 @@ All testing was performed and executed in the machine whose specs are down below
 - Operating System Information
 
 Fedora 29 Workstation
+
 Linux Daniel-Fixo 4.18.16-300.fc29.x86_64 #1 SMP Sat Oct 20 23:24:08 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
 
 
@@ -124,4 +125,3 @@ L1i cache:           64K
 L2 cache:            512K
 L3 cache:            8192K
 NUMA node0 CPU(s):   0-15
-

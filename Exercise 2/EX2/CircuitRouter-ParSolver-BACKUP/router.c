@@ -359,6 +359,7 @@ void* router_solve (void* argPtr){
 	list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
 
 	lock_insert();
+	if(success)
 	list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 	unlock_insert();
 

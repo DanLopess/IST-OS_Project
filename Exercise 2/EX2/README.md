@@ -54,7 +54,7 @@ EX2
 │	├── random-x48-y48-z3-n48.txt
 │	├── random-x48-y48-z3-n64.txt
 │	├── random-x64-y64-z3-n48.txt
-│	└── random-x64-y64-z3-n64.txt			
+│	└── random-x64-y64-z3-n64.txt
 ├── lib
 │	├── commandlinereader.c
 │	├── commandlinereader.h
@@ -81,7 +81,7 @@ EX2
 		- write cd CircuitRouter-ParSolver
 		- write "./CircuitRouter-ParSolver -t $(numberOfThreads) $inputFileName"
 		- write cd ..
-- 4b (doTest.sh):   
+- 4b (doTest.sh):
 		- write "./doTest.sh $(numberOfThreads) $inputFileName"
 		Note: Results output will be created into results folder
 - 5: write "make clean"
@@ -92,17 +92,36 @@ EX2
 All testing was performed and executed in the machine whose specs are down below.
 
 ### Specs
-- Operating System
+- Operating System Information
+
 Fedora 29 Workstation
-...
+Linux Daniel-Fixo 4.18.16-300.fc29.x86_64 #1 SMP Sat Oct 20 23:24:08 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+
 
 - Hardware
-Model: AMD Ryzen™ 7 1700X
-Core count: 8cores
-Clock rate: 3.85Ghz (Overclocked)
-...
 
-NOTE: get a more specified information on operating system
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+CPU(s):              16
+On-line CPU(s) list: 0-15
+Thread(s) per core:  2
+Core(s) per socket:  8
+Socket(s):           1
+NUMA node(s):        1
+Vendor ID:           AuthenticAMD
+CPU family:          23
+Model:               1
+Model name:          AMD Ryzen 7 1700X Eight-Core Processor
+Stepping:            1
+CPU MHz:             1925.359
+CPU max MHz:         3850.0000
+CPU min MHz:         2200.0000
+BogoMIPS:            6800.20
+Virtualization:      AMD-V
+L1d cache:           32K
+L1i cache:           64K
+L2 cache:            512K
+L3 cache:            8192K
+NUMA node0 CPU(s):   0-15
 
-usando os comandos i)
-cat /proc/cpuinfo e ii) uname -a

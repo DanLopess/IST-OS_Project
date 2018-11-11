@@ -102,26 +102,49 @@ Linux Daniel-Fixo 4.18.16-300.fc29.x86_64 #1 SMP Sat Oct 20 23:24:08 UTC 2018 x8
 - Hardware
 
 Architecture:        x86_64
+
 CPU op-mode(s):      32-bit, 64-bit
+
 Byte Order:          Little Endian
+
 CPU(s):              16
+
 On-line CPU(s) list: 0-15
+
 Thread(s) per core:  2
+
 Core(s) per socket:  8
+
 Socket(s):           1
+
 NUMA node(s):        1
+
 Vendor ID:           AuthenticAMD
+
 CPU family:          23
+
 Model:               1
+
 Model name:          AMD Ryzen 7 1700X Eight-Core Processor
+
 Stepping:            1
+
 CPU MHz:             1925.359
+
 CPU max MHz:         3850.0000
+
 CPU min MHz:         2200.0000
+
 BogoMIPS:            6800.20
+
 Virtualization:      AMD-V
+
 L1d cache:           32K
+
 L1i cache:           64K
+
 L2 cache:            512K
+
 L3 cache:            8192K
+
 NUMA node0 CPU(s):   0-15

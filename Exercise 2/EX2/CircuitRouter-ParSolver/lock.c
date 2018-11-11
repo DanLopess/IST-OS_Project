@@ -13,7 +13,7 @@ pthread_mutex_t insert_lock;
 * lock_init Initializes all mutexes used in the program
 */
 void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
-	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
 	int i;
 	// maybe need to alloc mutexes[i] because only mutexes (global) has been allocated
 	for (i = 0; i < gridSize; i++) {
@@ -39,10 +39,21 @@ void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 
 /* ======= Grid mutexes ====== */
 void lock_alloc(grid_t* gridPtr) {
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
+	int i;
 
+	for(i = 0; i < gridSize; i++) {
+		gridPtr->mutexes[i] = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
+	}
+		
 }
 void lock_free(grid_t* gridPtr) {
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
+	int i;
 
+	for(i = 0; i < gridSize; i++) {
+		free(gridPtr->mutexes[i]);
+	}
 }
 
 /* ======= Specialized mutexes ====== */

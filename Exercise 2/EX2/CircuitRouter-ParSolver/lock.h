@@ -6,9 +6,9 @@
 
 void lock_init(grid_t* gridPtr);
 
-void lock_grid();
+void lock_alloc(grid_t* gridPtr);
 
-void unlock_grid();
+void lock_free(grid_t* gridPtr);
 
 void lock_queue();
 

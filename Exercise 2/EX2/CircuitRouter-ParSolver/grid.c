@@ -89,11 +89,10 @@ grid_t* grid_alloc (long width, long height, long depth){
         assert(points_unaligned);
         gridPtr->points_unaligned = points_unaligned;
         gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
-                                          & ~(CACHE_LINE_SIZE-1)))
-                                  + CACHE_LINE_SIZE);
-				gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
-				lock_alloc(gridPtr); /* allocates each individual mutex */ // TODO IS THIS NEEDED????????
-				lock_init(gridPtr); /*Initializes all necessary mutexes*/
+                           & ~(CACHE_LINE_SIZE-1))) + CACHE_LINE_SIZE);
+	gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
+	lock_alloc(gridPtr); /* allocates each individual mutex */ 
+	lock_init(gridPtr); /*Initializes all necessary mutexes*/
 
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
     }
@@ -253,8 +252,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 		}
 
 		for (i = 0; i < n; i++) {
-			printf("entered forloop\n");
-			exit(1);
 			if (pthread_mutex_trylock(locks[i])==0) {
 				long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
 				if (*gridPointPtr != GRID_POINT_EMPTY)

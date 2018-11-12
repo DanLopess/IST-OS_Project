@@ -65,8 +65,8 @@
 #include "lock.h"
 #include <unistd.h>
 
-#define STARTDELAY 20 /* 20 nanoseconds */
-#define MAXDELAY 10000 /* 10000 nanoseconds */
+#define STARTDELAY 10
+#define MAXDELAY 10 /* 0.9 seconds */
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
 
@@ -237,13 +237,13 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long n = vector_getSize(pointVectorPtr);
 		useconds_t delay = STARTDELAY; /* Delay in usec */
 		pthread_mutex_t** mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
-
+		bool_t success = TRUE;
 		for(i = 0; i < n; i++) {
 			mutexes[i] = getMutex(gridPtr, pointVectorPtr, i);
 		}
 
 		for (i = 0; i < n; i++) {
-			if (pthread_mutex_lock(mutexes[i])!=0) {
+			if (pthread_mutex_trylock(mutexes[i])!=0) {
 				printf("%ld thread: collision occured\n", pthread_self());
 				int f;
 				for (f = i-1; f>=0; f--) { /* undoes everything and waits */
@@ -269,14 +269,16 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 		for (i = 1; i < (n-1); i++) { /* checks if is hitting another path */
 			long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
 			if (*gridPointPtr != GRID_POINT_EMPTY){
-				free(mutexes);
-				return FALSE;
+				success = FALSE;
+				break;
 			}
 		}
-    for (i = 1; i < (n-1); i++) {
-        long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-        *gridPointPtr = GRID_POINT_FULL;
-    }
+		if(success){
+	    for (i = 1; i < (n-1); i++) {
+	        long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+	        *gridPointPtr = GRID_POINT_FULL;
+	    }
+		}
 		printf("%ld thread: path added\n", pthread_self());
 
 		/* Unlocks everything now */
@@ -286,8 +288,9 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 				exit(1);
 			}
 		}
+	
 		free(mutexes);
-		return TRUE;
+		return success;
 }
 
 

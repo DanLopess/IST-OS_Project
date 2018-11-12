@@ -105,7 +105,6 @@ grid_t* grid_alloc (long width, long height, long depth){
  * =============================================================================
  */
 void grid_free (grid_t* gridPtr){
-		//lock_destroy(gridPtr); /* destroy all mutexes */
 		lock_free(gridPtr); /* frees all mutexes allocated (pointers) */
     free(gridPtr->points_unaligned);
     free(gridPtr);

@@ -49,6 +49,7 @@ EX2
 │	├── random-x128-y128-z5-n128.txt
 │	├── random-x256-y256-z3-n256.txt
 │	├── random-x256-y256-z5-n256.txt
+│	├── random-x512-y512-z7-n512.txt
 │	├── random-x32-y32-z3-n64.txt
 │	├── random-x32-y32-z3-n96.txt
 │	├── random-x48-y48-z3-n48.txt
@@ -70,6 +71,19 @@ EX2
 │	├── vector.c
 │	└── vector.h
 └── results
+│	├── random-x128-y128-z3-n128.txt.speedup.csv
+│	├── random-x128-y128-z3-n64.txt.speedup.csv
+│	├── random-x128-y128-z5-n128.txt.speedup.csv
+│	├── random-x256-y256-z3-n256.txt.speedup.csv
+│	├── random-x256-y256-z5-n256.txt.speedup.csv
+│	├── random-x512-y512-z7-n512.txt.speedup.csv
+│	├── random-x32-y32-z3-n64.txt.speedup.csv
+│	├── random-x32-y32-z3-n96.txt.speedup.csv
+│	├── random-x48-y48-z3-n48.txt.speedup.csv
+│	├── random-x48-y48-z3-n64.txt.speedup.csv
+│	├── random-x64-y64-z3-n48.txt.speedup.csv
+│	└── random-x64-y64-z3-n64.txt.speedup.csv
+└──
 `
 
 ### How to compile
@@ -83,11 +97,10 @@ EX2
 		- write cd ..
 - 4b (doTest.sh):
 		- write "./doTest.sh $(numberOfThreads) $inputFileName"
-		Note: Results output will be created into results folder
 - 5: write "make clean"
 - 6: close bash shell
 `
-Note: While obtaining the results files, an 8-core cpu with hyperthreading was used making a total of 16 threads, cpu description will be down below.
+Note: While obtaining the results files, an 8-core cpu with hyperthreading was used, making a total of 16 threads, cpu description will be down below.
 
 ### Testing
 All testing was performed and executed in the machine whose specs are down below.
@@ -95,10 +108,10 @@ All testing was performed and executed in the machine whose specs are down below
 ### Specs
 - Operating System Information
 
-Fedora 29 Workstation
+Fedora 29 Workstation:
 
-Linux Daniel-Fixo 4.18.16-300.fc29.x86_64 #1 SMP Sat Oct 20 23:24:08 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
-
+Linux Daniel-Fixo 4.18.16-300.fc29.x86_64 #1
+SMP Sat Oct 20 23:24:08 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
 
 - Hardware
 

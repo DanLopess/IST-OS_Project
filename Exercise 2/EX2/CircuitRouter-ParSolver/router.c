@@ -360,9 +360,9 @@ void* router_solve (void* argPtr){
 	list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
 	unlock_insert();
 
+
 	grid_free(myGridPtr);
 	queue_free(myExpansionQueuePtr);
-
 	return 0;
 }
 

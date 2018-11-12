@@ -65,8 +65,8 @@
 #include "lock.h"
 #include <unistd.h>
 
-#define STARTDELAY 50
-#define MAXDELAY 10000
+#define STARTDELAY 20 /* 20 nanoseconds */
+#define MAXDELAY 10000 /* 10000 nanoseconds */
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
 
@@ -90,7 +90,7 @@ grid_t* grid_alloc (long width, long height, long depth){
       gridPtr->points_unaligned = points_unaligned;
       gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
                          & ~(CACHE_LINE_SIZE-1))) + CACHE_LINE_SIZE);
-			gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
+
 			lock_alloc(gridPtr); /* allocates each individual mutex */
 			lock_init(gridPtr); /*Initializes all necessary mutexes*/
 
@@ -236,43 +236,25 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
 		useconds_t delay = STARTDELAY; /* Delay in usec */
-		pthread_mutex_t** locks = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
+		pthread_mutex_t** mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
 
-		/* get all locks */
-		for (i = 0; i < n; i++) {
-			long* xPtr = (long*) malloc(sizeof(long));
-			long* yPtr = (long*) malloc(sizeof(long));
-			long* zPtr = (long*) malloc(sizeof(long));
-			long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-			grid_getPointIndices (gridPtr, gridPointPtr, xPtr, yPtr, zPtr);
-			printf("x: %ld ; y: %ld ;z: %ld \n", *xPtr,*yPtr,*zPtr);
-			locks[i] = grid_getMutexRef(gridPtr, *xPtr,*yPtr,*zPtr);
-			free(xPtr);
-			free(yPtr);
-			free(zPtr);
+		for(i = 0; i < n; i++) {
+			mutexes[i] = getMutex(gridPtr, pointVectorPtr, i);
 		}
 
 		for (i = 0; i < n; i++) {
-			printf("enteredloop\n");
-			if (pthread_mutex_trylock(locks[i])==0) {
-				long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
-				if (*gridPointPtr != GRID_POINT_EMPTY)
-					return FALSE;
-				printf("managed to lock\n");
-				exit(1);
-			}
-			else {
+			if (pthread_mutex_lock(mutexes[i])!=0) {
+				printf("%ld thread: collision occured\n", pthread_self());
 				int f;
-
 				for (f = i-1; f>=0; f--) { /* undoes everything and waits */
-					if (pthread_mutex_unlock(locks[f])!=0) { /* unlocks previous locked mutexes*/
+					if (pthread_mutex_unlock(mutexes[f])!=0) { /* unlocks previous locked mutexes*/
 						fprintf(stderr, "Failed to unlock mutex.\n");
 						exit(1);
 					}
 				}
 				usleep(delay); /* sleeps for 'delay' nanoseconds until it can start again */
 		    if (delay < MAXDELAY) {
-		        delay *= 2;
+		        delay = (delay + 1) << 1;
 		    } else {
 					delay = STARTDELAY;
 				}
@@ -281,24 +263,30 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 				i = -1; /* -1 because of i++ */
 				continue;
 			}
+			printf("%ld thread: locked coordinate\n", pthread_self());
 		}
 
-    for (i = 1; i < (n-1); i++) { /* all coordinates have been locked, it can write now*/
+		for (i = 1; i < (n-1); i++) { /* checks if is hitting another path */
+			long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+			if (*gridPointPtr != GRID_POINT_EMPTY){
+				free(mutexes);
+				return FALSE;
+			}
+		}
+    for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL;
     }
+		printf("%ld thread: path added\n", pthread_self());
 
 		/* Unlocks everything now */
 		for (i = 0; i<n; i++) { /* undoes everything and waits */
-			if (pthread_mutex_unlock(locks[i])!=0) { /* unlocks previous locked mutexes*/
+			if (pthread_mutex_unlock(mutexes[i])!=0) { /* unlocks previous locked mutexes*/
 				fprintf(stderr, "Failed to unlock mutex.\n");
 				exit(1);
 			}
 		}
-
-		/* free mutexes vector */
-		free(locks);
-
+		free(mutexes);
 		return TRUE;
 }
 

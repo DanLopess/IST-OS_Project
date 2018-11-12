@@ -9,13 +9,14 @@
 pthread_mutex_t grid_lock;
 pthread_mutex_t queue_lock;
 pthread_mutex_t insert_lock;
+
 /*
 * lock_init Initializes all mutexes used in the program
 */
 void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
-	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
 	int i;
-	// maybe need to alloc mutexes[i] because only mutexes (global) has been allocated
+
 	for (i = 0; i < gridSize; i++) {
 		if(pthread_mutex_init(gridPtr->mutexes[i], NULL)!=0){
 			fprintf(stderr, "Failed to initiate mutex.\n");
@@ -38,22 +39,43 @@ void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 }
 
 /* ======= Grid mutexes ====== */
+/* allocated all mutexes for grid locking */
 void lock_alloc(grid_t* gridPtr) {
-	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
+	gridPtr->mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*gridSize);
 	int i;
 
 	for(i = 0; i < gridSize; i++) {
 		gridPtr->mutexes[i] = (pthread_mutex_t*) malloc(sizeof(pthread_mutex_t));
 	}
-		
+
 }
+/* frees all mutexes for grid locking */
 void lock_free(grid_t* gridPtr) {
-	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/	
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
 	int i;
 
 	for(i = 0; i < gridSize; i++) {
 		free(gridPtr->mutexes[i]);
 	}
+	free(gridPtr->mutexes);
+}
+
+/* returns a given mutex based on a point in the index of pointVectorPtr  */
+pthread_mutex_t* getMutex(grid_t* gridPtr, vector_t* pointVectorPtr, int index) {
+	long* xPtr = (long*) malloc(sizeof(long));
+	long* yPtr = (long*) malloc(sizeof(long));
+	long* zPtr = (long*) malloc(sizeof(long));
+	long* gridPointPtr = (long*)vector_at(pointVectorPtr, index);
+	pthread_mutex_t* lock;
+
+	grid_getPointIndices (gridPtr, gridPointPtr, xPtr, yPtr, zPtr);
+	lock = grid_getMutexRef(gridPtr, *xPtr,*yPtr,*zPtr);
+	free(xPtr);
+	free(yPtr);
+	free(zPtr);
+
+	return (lock);
 }
 
 /* ======= Specialized mutexes ====== */

@@ -240,40 +240,38 @@ int main(int argc, char** argv){
 	TIMER_READ(stopTime);
 
 	long numPathRouted = 0;
-    	list_iter_t it;
-    	list_iter_reset(&it, pathVectorListPtr);
-    	while (list_iter_hasNext(&it, pathVectorListPtr)) {
-        	vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
-       		numPathRouted += vector_getSize(pathVectorPtr);
-    	}
+	list_iter_t it;
+	list_iter_reset(&it, pathVectorListPtr);
+	while (list_iter_hasNext(&it, pathVectorListPtr)) {
+    	vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
+   		numPathRouted += vector_getSize(pathVectorPtr);
+	}
 	fprintf(resultFp, "Paths routed    = %li\n", numPathRouted);
-    	fprintf(resultFp, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
+	fprintf(resultFp, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
 
-    	/*Check solution and clean up */
-    	assert(numPathRouted <= numPathToRoute);
-    	bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
-    	assert(status == TRUE);
-    	fputs("Verification passed.\n",resultFp);
-		
+	/*Check solution and clean up */
+	assert(numPathRouted <= numPathToRoute);
+	bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
+	assert(status == TRUE);
+	fputs("Verification passed.\n",resultFp);
+
+	lock_free(mazePtr->gridPtr);
 	maze_free(mazePtr);
-	lock_free(mazePtr->gridPtr);  
 	router_free(routerPtr);
-    	list_iter_reset(&it, pathVectorListPtr);
+	list_iter_reset(&it, pathVectorListPtr);
 
-	/*TODO pthread_mutex_exit*/
-
-   	while (list_iter_hasNext(&it, pathVectorListPtr)) {
-        	vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
-	        vector_t* v;
-        	while((v = vector_popBack(pathVectorPtr))) {
-            		// v stores pointers to longs stored elsewhere; no need to free them here
-            		vector_free(v);
-        	}
-        	vector_free(pathVectorPtr);
-    	}
-   	list_free(pathVectorListPtr);
-    	fclose(resultFp);
-    	exit(0);
+ 	while (list_iter_hasNext(&it, pathVectorListPtr)) {
+  	vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
+    vector_t* v;
+  	while((v = vector_popBack(pathVectorPtr))) {
+      		// v stores pointers to longs stored elsewhere; no need to free them here
+      		vector_free(v);
+  	}
+  	vector_free(pathVectorPtr);
+	}
+	list_free(pathVectorListPtr);
+	fclose(resultFp);
+	exit(0);
 }
 
 

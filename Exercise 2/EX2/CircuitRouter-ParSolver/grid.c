@@ -244,7 +244,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 
 		for (i = 0; i < n; i++) {
 			if (pthread_mutex_trylock(mutexes[i])!=0) {
-				printf("%ld thread: collision occured\n", pthread_self());
 				int f;
 				for (f = i-1; f>=0; f--) { /* undoes everything and waits */
 					if (pthread_mutex_unlock(mutexes[f])!=0) { /* unlocks previous locked mutexes*/
@@ -263,7 +262,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 				i = -1; /* -1 because of i++ */
 				continue;
 			}
-			printf("%ld thread: locked coordinate\n", pthread_self());
 		}
 
 		for (i = 1; i < (n-1); i++) { /* checks if is hitting another path */
@@ -279,7 +277,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 	        *gridPointPtr = GRID_POINT_FULL;
 	    }
 		}
-		printf("%ld thread: path added\n", pthread_self());
 
 		/* Unlocks everything now */
 		for (i = 0; i<n; i++) { /* undoes everything and waits */
@@ -288,7 +285,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 				exit(1);
 			}
 		}
-	
+
 		free(mutexes);
 		return success;
 }

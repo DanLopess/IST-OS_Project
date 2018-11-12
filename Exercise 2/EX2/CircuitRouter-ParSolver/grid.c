@@ -65,8 +65,8 @@
 #include "lock.h"
 #include <unistd.h>
 
-#define STARTDELAY 5
-#define MAXDELAY 150
+#define STARTDELAY 50
+#define MAXDELAY 15000
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
 

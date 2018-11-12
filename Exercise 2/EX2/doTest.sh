@@ -14,7 +14,7 @@ for i in $(seq 1 $option)
 do
 	./CircuitRouter-ParSolver/CircuitRouter-ParSolver -t $i $inputName
 	partime=$(grep "seconds" $inputName.res | cut -d = -f2 |cut -d s -f1)
-	speedup=$(echo "scale=6; "${seqTime}/${partime} | bc)
-	echo $i", "$parTime", "$speedup >> $output
+	speedup=$(echo "scale=6; "${seqtime}/${partime} | bc)
+	echo $i", "$partime", "$speedup >> $output
 done
 echo "====== Leaving script... ======"

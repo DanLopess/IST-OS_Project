@@ -1,7 +1,6 @@
 #!/bin/bash
 # Speed_Up script
 # Note: This script evaluates the efficiency of a parallel solution against a sequential one
-echo "====== Speed_up: Efficiency meter ======"
 option=$1
 inputName=$2
 $inputName.res
@@ -15,6 +14,5 @@ do
 	./CircuitRouter-ParSolver/CircuitRouter-ParSolver -t $i $inputName
 	partime=$(grep "seconds" $inputName.res | cut -d = -f2 |cut -d s -f1)
 	speedup=$(echo "scale=6; "${seqtime}/${partime} | bc)
-	echo $i", "$partime", "$speedup >> results/$output
+	echo $i", "$partime", "$speedup >> $output
 done
-echo "====== Leaving script... ======"

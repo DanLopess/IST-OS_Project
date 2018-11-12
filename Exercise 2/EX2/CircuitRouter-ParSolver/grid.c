@@ -91,8 +91,8 @@ grid_t* grid_alloc (long width, long height, long depth){
       gridPtr->points = (long*)((char*)(((unsigned long)points_unaligned
                          & ~(CACHE_LINE_SIZE-1))) + CACHE_LINE_SIZE);
 
-			lock_alloc(gridPtr); /* allocates each individual mutex */
-			lock_init(gridPtr); /*Initializes all necessary mutexes*/
+			lock_alloc(gridPtr); /* allocates each individual mutex and array of mutexes */
+			lock_init(gridPtr); /* Initializes all necessary mutexes */
 
 			memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
     }
@@ -105,6 +105,8 @@ grid_t* grid_alloc (long width, long height, long depth){
  * =============================================================================
  */
 void grid_free (grid_t* gridPtr){
+		lock_destroy(gridPtr); /* destroy all mutexes */
+		lock_free(gridPtr); /* frees all mutexes allocated (pointers) */
     free(gridPtr->points_unaligned);
     free(gridPtr);
 }
@@ -235,9 +237,10 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
 bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
-		useconds_t delay = STARTDELAY; /* Delay in usec */
+		useconds_t delay = STARTDELAY;
 		pthread_mutex_t** mutexes = (pthread_mutex_t**) malloc(sizeof(pthread_mutex_t*)*n);
 		bool_t success = TRUE;
+
 		for(i = 0; i < n; i++) {
 			mutexes[i] = getMutex(gridPtr, pointVectorPtr, i);
 		}
@@ -251,7 +254,7 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 						exit(1);
 					}
 				}
-				usleep(delay); /* sleeps for 'delay' nanoseconds until it can start again */
+				usleep(delay); /* sleeps for 'delay' microseconds until it can start again */
 		    if (delay < MAXDELAY) {
 		        delay = (delay + 1) << 1;
 		    } else {

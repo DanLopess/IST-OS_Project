@@ -6,6 +6,8 @@
 
 void lock_init(grid_t* gridPtr);
 
+void lock_destroy(grid_t* gridPtr);
+
 void lock_alloc(grid_t* gridPtr);
 
 void lock_free(grid_t* gridPtr);

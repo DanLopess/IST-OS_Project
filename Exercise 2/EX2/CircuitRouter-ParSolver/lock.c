@@ -38,6 +38,31 @@ void lock_init(grid_t* gridPtr) { /* 1 lock per coordinate */
 	}
 }
 
+void lock_destroy(grid_t* gridPtr) { /* 1 lock per coordinate */
+	int gridSize = gridPtr->width*gridPtr->height*gridPtr->depth; /* Number of coordinates*/
+	int i;
+
+	for (i = 0; i < gridSize; i++) {
+		if(pthread_mutex_destroy(gridPtr->mutexes[i])!=0){
+			fprintf(stderr, "Failed to destroy mutex.\n");
+			exit(1);
+		}
+	}
+
+	if(pthread_mutex_destroy(&grid_lock)!=0){
+		fprintf(stderr, "Failed to destroy mutex.\n");
+		exit(1);
+	}
+	if(pthread_mutex_destroy(&queue_lock)!=0){
+		fprintf(stderr, "Failed to destroy mutex.\n");
+		exit(1);
+	}
+	if(pthread_mutex_destroy(&insert_lock)!=0){
+		fprintf(stderr, "Failed to destroy mutex.\n");
+		exit(1);
+	}
+}
+
 /* ======= Grid mutexes ====== */
 /* allocated all mutexes for grid locking */
 void lock_alloc(grid_t* gridPtr) {

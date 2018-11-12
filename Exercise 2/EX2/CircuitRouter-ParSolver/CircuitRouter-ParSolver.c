@@ -255,7 +255,6 @@ int main(int argc, char** argv){
 	assert(status == TRUE);
 	fputs("Verification passed.\n",resultFp);
 
-	lock_free(mazePtr->gridPtr);
 	maze_free(mazePtr);
 	router_free(routerPtr);
 	list_iter_reset(&it, pathVectorListPtr);

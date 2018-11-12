@@ -3,7 +3,6 @@
 # Note: This script evaluates the efficiency of a parallel solution against a sequential one
 option=$1
 inputName=$2
-$inputName.res
 output=$inputName.speedup.csv
 ./CircuitRouter-SeqSolver/CircuitRouter-SeqSolver $inputName
 seqtime=$(grep "seconds" $inputName.res | cut -d = -f2 |cut -d s -f1)

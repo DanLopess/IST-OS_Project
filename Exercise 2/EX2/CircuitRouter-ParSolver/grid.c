@@ -65,8 +65,8 @@
 #include "lock.h"
 #include <unistd.h>
 
-#define STARTDELAY 10
-#define MAXDELAY 10
+#define STARTDELAY 5
+#define MAXDELAY 150
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
 
@@ -244,7 +244,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 		for(i = 0; i < n; i++) {
 			mutexes[i] = getMutex(gridPtr, pointVectorPtr, i);
 		}
-		printf("TEST OK\n");
 		for (i = 0; i < n; i++) {
 			if (pthread_mutex_trylock(mutexes[i])!=0) {
 				int f;
@@ -288,7 +287,6 @@ bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
 				exit(1);
 			}
 		}
-		printf("TEST OK\n");
 		free(mutexes);
 		return success;
 }

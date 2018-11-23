@@ -2,11 +2,17 @@
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
+// AdvShell works as a server in a namedpipe
+
+TODO:
+- 1 namedpipe to get the run command
+- 1 pipe to get times from child processes
+- 
 */
 
 #include "lib/commandlinereader.h"
 #include "lib/vector.h"
-#include "CircuitRouter-SimpleShell.h"
+#include "CircuitRouter-AdvShell.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -23,43 +29,26 @@
 #define MAXARGS 3
 #define BUFFER_SIZE 100
 
-int currentId = 9;
-
-child_t* createChild(vector_t *children, int pid){
-	child_t *child = malloc(sizeof(child_t));
-	if (child == NULL) {
-			perror("Error allocating memory");
-			exit(EXIT_FAILURE);
-	}
-	child->pid = pid;
-	currentId++;
-	child->id = currentId;
-	vector_pushBack(children, child);
-	return child;
-}
-
 void waitForChild(vector_t *children) {
     while (1) {
-				int status;
-				int pid = wait(&status);
-
-				for (int i = 0; i < vector_getSize(children); ++i){
-					child_t *child = vector_at(children, i);
-					if (child->pid < 0) {
-							if (errno == EINTR) {
-									/* Este codigo de erro significa que chegou signal que interrompeu a espera
-										 pela terminacao de filho; logo voltamos a esperar */
-									free(child);
-									continue;
-							} else {
-									perror("Unexpected error while waiting for child.");
-									exit (EXIT_FAILURE);
-							}
-					}
-					if(child->pid == pid){
-						child->status = status;
-					}
-				}
+        child_t *child = malloc(sizeof(child_t));
+        if (child == NULL) {
+            perror("Error allocating memory");
+            exit(EXIT_FAILURE);
+        }
+        child->pid = wait(&(child->status));
+        if (child->pid < 0) {
+            if (errno == EINTR) {
+                /* Este codigo de erro significa que chegou signal que interrompeu a espera
+                   pela terminacao de filho; logo voltamos a esperar */
+                free(child);
+                continue;
+            } else {
+                perror("Unexpected error while waiting for child.");
+                exit (EXIT_FAILURE);
+            }
+        }
+        vector_pushBack(children, child);
         return;
     }
 }
@@ -69,13 +58,12 @@ void printChildren(vector_t *children) {
         child_t *child = vector_at(children, i);
         int status = child->status;
         pid_t pid = child->pid;
-				int id =child->id;
         if (pid != -1) {
             const char* ret = "NOK";
             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                 ret = "OK";
             }
-            printf("CHILD EXITED: (PID=%d; ID= %d ; return %s)\n", pid, id, ret);
+            printf("CHILD EXITED: (PID=%d; return %s)\n", pid, ret);
         }
     }
     puts("END.");
@@ -96,7 +84,7 @@ int main (int argc, char** argv) {
     children = vector_alloc(MAXCHILDREN);
 
 
-    printf("Welcome to CircuitRouter-SimpleShell\n\n");
+    printf("Welcome to CircuitRouter-AdvShell\n\n");
 
     while (1) {
         int numArgs;
@@ -105,7 +93,7 @@ int main (int argc, char** argv) {
 
         /* EOF (end of file) do stdin ou comando "sair" */
         if (numArgs < 0 || (numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))) {
-            printf("CircuitRouter-SimpleShell will exit.\n--\n");
+            printf("CircuitRouter-AdvShell will exit.\n--\n");
 
             /* Espera pela terminacao de cada filho */
             while (runningChildren > 0) {
@@ -114,11 +102,12 @@ int main (int argc, char** argv) {
             }
 
             printChildren(children);
-            printf("--\nCircuitRouter-SimpleShell ended.\n");
+            printf("--\nCircuitRouter-AdvShell ended.\n");
             break;
         }
 
         else if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
+            int pid;
             if (numArgs < 2) {
                 printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
                 continue;
@@ -127,15 +116,16 @@ int main (int argc, char** argv) {
                 waitForChild(children);
                 runningChildren--;
             }
-						child_t *tempChild = createChild(children, fork());
-            if (tempChild->pid < 0) {
+
+            pid = fork();
+            if (pid < 0) {
                 perror("Failed to create new process.");
                 exit(EXIT_FAILURE);
             }
 
-            if (tempChild->pid > 0) {
+            if (pid > 0) {
                 runningChildren++;
-                printf("%s: background child with id %d started with PID %d.\n\n", COMMAND_RUN, tempChild->id, tempChild->pid);
+                printf("%s: background child started with PID %d.\n\n", COMMAND_RUN, pid);
                 continue;
             } else {
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";

@@ -91,22 +91,7 @@ int main (int argc, char** argv) {
 
         numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
 
-        /* EOF (end of file) do stdin ou comando "sair" */
-        if (numArgs < 0 || (numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))) {
-            printf("CircuitRouter-AdvShell will exit.\n--\n");
-
-            /* Espera pela terminacao de cada filho */
-            while (runningChildren > 0) {
-                waitForChild(children);
-                runningChildren --;
-            }
-
-            printChildren(children);
-            printf("--\nCircuitRouter-AdvShell ended.\n");
-            break;
-        }
-
-        else if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
+        if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
             int pid;
             if (numArgs < 2) {
                 printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
@@ -142,7 +127,7 @@ int main (int argc, char** argv) {
             continue;
         }
         else
-            printf("Unknown command. Try again.\n");
+            printf("Command not supported.\n");
 
     }
 

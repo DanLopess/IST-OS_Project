@@ -76,6 +76,9 @@ int main (int argc, char** argv) {
     int MAXCHILDREN = -1;
     vector_t *children;
     int runningChildren = 0;
+    fd_set fdset; 
+
+    FD_ZERO(&fdset); /* fills fdset with all zero's */
 
     if(argv[1] != NULL){
         MAXCHILDREN = atoi(argv[1]);
@@ -83,8 +86,13 @@ int main (int argc, char** argv) {
 
     children = vector_alloc(MAXCHILDREN);
 
-
     printf("Welcome to CircuitRouter-AdvShell\n\n");
+
+    unlink("../tmp/AdvShell.pipe");
+
+    if (mkfifo("../tmp/AdvShell.pipe", 0777) < 0) exit(-1); /* tries to make a new pipe */
+
+    FD_SET (/* file descriptor */, &fdset); //get pipe file descriptor (with fopen ou open)
 
     while (1) {
         int numArgs;

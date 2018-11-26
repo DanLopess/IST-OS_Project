@@ -4,8 +4,8 @@
 #include "../lib/vector.h"
 #include <sys/types.h>
 
-void exitRoutine(char *pipeName, char *shellPipeName);
-void writeLoop(char* shellPipeName);
-void readLoop(char *pipeName);
+void exitRoutine();
+void writeLoop();
+void readLoop();
 
 #endif /* CIRCUITROUTER_CLIENT_H */

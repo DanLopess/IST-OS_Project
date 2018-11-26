@@ -21,7 +21,10 @@
 
 #define BUFSIZE 255
 
-void exitRoutine(char* pipeName, char* shellPipeName) {
+char *pipeName;
+char *shellPipeName;
+
+void exitRoutine() {
 	close(shellPipeName); /* need to close file */
 	close(pipeName);
 	unlink(pipeName);
@@ -32,7 +35,7 @@ void exitRoutine(char* pipeName, char* shellPipeName) {
 /* 
  * reads from stdin and writes to advshell pipe 
  */
-void writeLoop(char* shellPipeName) {
+void writeLoop() {
 	char* command[BUFSIZE*2];
 	char* aux[BUFSIZE];
 	int fshell;
@@ -50,16 +53,16 @@ void writeLoop(char* shellPipeName) {
 			continue;
 		}
 		scanf("%s", command);
-		strcat(command, '|'); /*Separates pipename from command*/
-		strcat(command, pipeName);
-		printf("%s", pipeName); /*DEBUG*/
+		strcat(command, '|'); /*Separates shellPipeName from command*/
+		strcat(command, shellPipeName);
+		printf("%s", shellPipeName); /*DEBUG*/
 	}
 }
 
 /* 
  * reads from own pipe and writes to stdout 
  */
-void readLoop (char *pipeName) {
+void readLoop () {
 	char message[BUFSIZE];
 	int fclient;
 
@@ -75,11 +78,11 @@ void readLoop (char *pipeName) {
 
 int main(int argc, char const *argv[]) {
 
-	signal(SIGINT, exitRoutine(pipeName, shellPipeName)); /* if CTRL+C is received, exits */
+	signal(SIGINT, exitRoutine); /* TODO how to send those variables to this function? */
 	char command[BUFSIZE];
-    char* pipeName = (char*) malloc(sizeof(char)*BUFSIZE); /* creates a string with BUFSIZE characters */
-	char* shellPipeName;
 	int pid;
+
+	pipeName = (char*) malloc(sizeof(char)*BUFSIZE); /* creates a string with BUFSIZE characters */
 
 	if (pipeName == NULL) exit(-1); /* failed to allocate memory */
 
@@ -104,11 +107,11 @@ int main(int argc, char const *argv[]) {
 
 	pid = fork();
 	if (pid == 0) {
-		readLoop(pipeName); 
+		readLoop();
 	}
 	if (pid > 0) {
 		if (argv[1] != NULL) { /* if argument exits then it must be advshell pipeName */
-			writeLoop(shellPipeName);
+			writeLoop();
 		}
 		else {
 			exit(-1); /* advshell pipe name unknown, exits program */

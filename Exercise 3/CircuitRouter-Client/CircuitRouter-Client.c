@@ -3,7 +3,7 @@
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
 // AdvShell works as a client in a namedpipe
 
-TODO: 
+TODO:
 - 1 namedpipe to send command to advshell (which is waiting for commands)
 - 1 namedpipe to receive info from advshell
 */
@@ -23,32 +23,35 @@ TODO:
 #include <errno.h>
 #include <fcntl.h>
 
-#define NAMESIZE 100
+#define NAMESIZE 255
+char* pipeName;
 
-int main(int argc, char const *argv[])
-{
+
+void exitRoutine() {
+	unlink(pipeName);
+	exit(0);
+}
+
+int main(int argc, char const *argv[]) {
+
+	signal(SIGINT, exitRoutine);
     int fshell, fclient;
-    char* pipeName = (char*) malloc(sizeof(char)*NAMESIZE); /* creates a string with NAMESIZE characters */
+	char command[NAMESIZE];
+    pipeName = (char*) malloc(sizeof(char)*NAMESIZE); /* creates a string with NAMESIZE characters */
 
-    strcpy(pipeName, "../temp/ClientXXXXXX"); /* fills pipeName with generic expression */
-
-    if(mkdtemp(pipeName) < 0) /* create own pipe file */
+    if(strcpy(pipeName, mkdtemp("../temp/ClientXXXXXX") < 0) /* create own pipe file */
         exit(-1);
-    
+
     strcat(pipeName, "/client.pipe");
-    
-    unlink(pipeName);
 
-    if (mkfifo(pipeName, 0777) < 0)
+    if (mkfifo(pipeName, 0777) < 0) {
+		printf("Error creating pipe.\n");
         exit(-1);
+	}
+
 
     // ... read from stdin... send to advshell pipe, read from client pipe
 
 
-
-    unlink(pipeName);
-    
     return 0;
 }
-
-

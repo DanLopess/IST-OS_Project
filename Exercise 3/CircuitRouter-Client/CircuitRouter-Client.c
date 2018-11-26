@@ -23,7 +23,7 @@ TODO:
 #include <errno.h>
 #include <fcntl.h>
 
-#define NAMESIZE 255
+#define BUFSIZE 255
 char* pipeName;
 
 
@@ -32,12 +32,39 @@ void exitRoutine() {
 	exit(0);
 }
 
+void writeLoop() {
+	char* command[BUFSIZE*2];
+	char* aux[BUFSIZE];
+	while (1) {
+		scanf("%s", aux);
+		if (!strcmp(aux, "run ")) {
+			printf("Command not supported.\n");
+			continue;
+		}
+		scanf("%s", command);
+		strcat(command, '|'); /*Separates pipename from command*/
+		strcat(command, pipeName);
+		printf("%s", pipeName); /*DEBUG*/
+	}
+}
+
+
+void readLoop() {
+	char *message;
+	fd = open(pipeName, O_RDONLY);
+	while (1) {
+		if(read( fd, message, BUFSIZE) > 0 )
+			printf("%s\n", message);
+	}
+}
+
+
 int main(int argc, char const *argv[]) {
 
 	signal(SIGINT, exitRoutine);
     int fshell, fclient;
-	char command[NAMESIZE];
-    pipeName = (char*) malloc(sizeof(char)*NAMESIZE); /* creates a string with NAMESIZE characters */
+	char command[BUFSIZE];
+    pipeName = (char*) malloc(sizeof(char)*BUFSIZE); /* creates a string with BUFSIZE characters */
 
     if(strcpy(pipeName, mkdtemp("../temp/ClientXXXXXX") < 0) /* create own pipe file */
         exit(-1);
@@ -49,7 +76,15 @@ int main(int argc, char const *argv[]) {
         exit(-1);
 	}
 
-
+	pid = fork();
+	if (pid == 0) {
+		readLoop();
+	}
+	if (pid > 0) {
+		writeLoop();
+	}
+	else
+		exit(1);
     // ... read from stdin... send to advshell pipe, read from client pipe
 
 

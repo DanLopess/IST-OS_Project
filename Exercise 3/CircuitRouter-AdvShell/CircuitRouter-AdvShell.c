@@ -3,15 +3,10 @@
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
 // AdvShell works as a server in a namedpipe
-
-TODO:
-- 1 namedpipe to get the run command
-- 1 pipe to get times from child processes
-- 
 */
 
-#include "lib/commandlinereader.h"
-#include "lib/vector.h"
+#include "../lib/commandlinereader.h"
+#include "../lib/vector.h"
 #include "CircuitRouter-AdvShell.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -112,6 +107,8 @@ int main (int argc, char** argv) {
         if ((fshell = open("../tmp/AdvShell.pipe", O_RDONLY)) < 0)
             exit(-1);
 
+
+        /* ver sugestao do professor, utilizar o select para decidir se leio do stdin ou do pipe */
         numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
 
         if (fshell > numArgs) /* determines which files descriptor is the highest */
@@ -149,14 +146,14 @@ int main (int argc, char** argv) {
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
                 char *newArgs[3] = {seqsolver, args[1], NULL};
 
-                execv(seqsolver, newArgs);
-                perror("Error while executing child process"); // Nao deveria chegar aqui
+                execv(seqsolver, newArgs); /* if main returned 0, then all ok */
+                perror("Error while executing child process"); /* Not supposed to get here */
                 exit(EXIT_FAILURE);
             }
         }
 
         else if (numArgs == 0){
-            /* Nenhum argumento; ignora e volta a pedir */
+            /* No argument, ignores and asks again */
             continue;
         }
         else

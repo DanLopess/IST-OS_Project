@@ -1,7 +1,7 @@
 #ifndef CIRCUITROUTER_ADVSHELL_H
 #define CIRCUITROUTER_ADVSHELL_H
 
-#include "lib/vector.h"
+#include "../lib/vector.h"
 #include <sys/types.h>
 
 typedef struct {

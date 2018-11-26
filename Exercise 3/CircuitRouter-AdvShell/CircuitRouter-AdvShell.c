@@ -16,12 +16,14 @@ TODO:
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/select.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
+#include<fcntl.h>
 
 #define COMMAND_EXIT "exit"
 #define COMMAND_RUN "run"
@@ -69,6 +71,14 @@ void printChildren(vector_t *children) {
     puts("END.");
 }
 
+void stdinParse() {
+
+}
+
+void pipeParse() {
+
+}
+
 int main (int argc, char** argv) {
 
     char *args[MAXARGS + 1];
@@ -76,7 +86,7 @@ int main (int argc, char** argv) {
     int MAXCHILDREN = -1;
     vector_t *children;
     int runningChildren = 0;
-    fd_set fdset; 
+    fd_set fdset;
 
     FD_ZERO(&fdset); /* fills fdset with all zero's */
 
@@ -88,16 +98,31 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    unlink("../tmp/AdvShell.pipe");
-
-    if (mkfifo("../tmp/AdvShell.pipe", 0777) < 0) exit(-1); /* tries to make a new pipe */
-
-    FD_SET (/* file descriptor */, &fdset); //get pipe file descriptor (with fopen ou open)
+    if (unlink("../tmp/AdvShell.pipe") < 0) 
+        exit(-1); /* errno if unlink failed */
+    
+    if (mkfifo("../tmp/AdvShell.pipe", 0777) < 0) 
+        exit(-1); /* tries to make a new pipe */
 
     while (1) {
         int numArgs;
+        int fshell;
+        int max; /* stores highest file descriptor*/
+
+        if ((fshell = open("../tmp/AdvShell.pipe", O_RDONLY)) < 0)
+            exit(-1);
 
         numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+
+        if (fshell > numArgs) /* determines which files descriptor is the highest */
+            max = fshell + 1;
+        else 
+            max = numArgs + 1;
+
+        FD_SET(fshell, &fdset);  /* sets pipe for listening */
+        FD_SET(numArgs, &fdset); /* sets stdin for listening, maybe not numArgs */
+        
+        select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
 
         if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
             int pid;
@@ -143,6 +168,9 @@ int main (int argc, char** argv) {
         free(vector_at(children, i));
     }
     vector_free(children);
+
+    if (unlink("../tmp/AdvShell.pipe") < 0)
+        exit(-1); /* errno if unlink failed */
 
     return EXIT_SUCCESS;
 }

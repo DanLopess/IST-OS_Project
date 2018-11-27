@@ -93,7 +93,7 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    if (unlink("../tmp/AdvShell/AdvShell.pipe") < 0) 
+    if (unlink("../tmp/AdvShell/AdvShell.pipe") < 0)
         exit(-1); /* errno if unlink failed */
 
     if (mkfifo("../tmp/AdvShell/AdvShell.pipe", 0777) < 0)
@@ -103,21 +103,35 @@ int main (int argc, char** argv) {
         exit(-1);
 
     while (1) {
-        int numArgs;
+        int numArgs, selected;
         int max; /* stores highest file descriptor*/
+        int stdin; /* stdin file descriptor */
 
-        /* ver sugestao do professor, utilizar o select para decidir se leio do stdin ou do pipe */
-        numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+        stdin = fileno(stdin);
 
-        if (fshell > numArgs) /* determines which files descriptor is the highest */
+        if (fshell > stdin) /* determines which files descriptor is the highest */
             max = fshell + 1;
-        else 
-            max = numArgs + 1;
+        else
+            max = stdin + 1;
 
         FD_SET(fshell, &fdset);  /* sets pipe for listening */
-        FD_SET(numArgs, &fdset); /* sets stdin for listening, maybe not numArgs */
-        
-        select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
+        FD_SET(stdin, &fdset); /* sets stdin for listening, maybe not numArgs */
+
+        selected = select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
+
+        if (selected == -1 || selected == 0) { //TODO finish up
+            printf("Error reading instructions.\n");
+            exit(1);
+        }
+        else {
+            if (FD_ISSET(stdin, &fdset)) {
+                scanf("%s", buffer);
+            }
+            if (FD_ISSET(fshell, &fdset)) {
+                numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+            }
+        }
+
 
         if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
             int pid;

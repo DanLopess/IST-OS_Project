@@ -25,7 +25,7 @@ char *pipeName;
 char *shellPipeName;
 
 void exitRoutine() {
-	close(shellPipeName); /* need to close file */
+	close(shellPipeName); /* need to close files */
 	close(pipeName);
 	unlink(pipeName);
 	free(pipeName);
@@ -36,8 +36,8 @@ void exitRoutine() {
  * reads from stdin and writes to advshell pipe 
  */
 void writeLoop() {
-	char* command[BUFSIZE*2];
-	char* aux[BUFSIZE];
+	char command[BUFSIZE*2];
+	char aux[BUFSIZE];
 	int fshell;
 
 	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
@@ -77,22 +77,17 @@ void readLoop () {
 
 
 int main(int argc, char const *argv[]) {
-
-	signal(SIGINT, exitRoutine); /* TODO how to send those variables to this function? */
-	char command[BUFSIZE];
 	int pid;
+
+	signal(SIGINT, exitRoutine);
 
 	pipeName = (char*) malloc(sizeof(char)*BUFSIZE); /* creates a string with BUFSIZE characters */
 
-	if (pipeName == NULL) exit(-1); /* failed to allocate memory */
+	if (pipeName == NULL) exit(-1); /* failed to allocate memory */	
+	if(argv[1] == NULL) exit(-1); /* argument must exist because it contains advshell pipename*/
 
-	if (argv[1] != NULL) { /* if argument exits then it must be advshell pipeName */
-		strcpy(shellPipeName, argv[1]);
-	} else {
-		exit(-1); /* no argument found */
-	}
+	strcpy(shellPipeName, argv[1]); /* passed verification so we can assign it to shellPipeName */
 
-	
 
 	if(strcpy(pipeName, mkdtemp("../temp/ClientXXXXXX") < 0)) /* create own pipe file */
         exit(-1);
@@ -112,12 +107,7 @@ int main(int argc, char const *argv[]) {
 		readLoop();
 	}
 	if (pid > 0) {
-		if (argv[1] != NULL) { /* if argument exits then it must be advshell pipeName */
-			writeLoop();
-		}
-		else {
-			exit(-1); /* advshell pipe name unknown, exits program */
-		}
+		writeLoop();
 	}
 	else {
 		exit(1); 

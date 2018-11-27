@@ -1,4 +1,3 @@
-
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
@@ -11,6 +10,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <sys/select.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,12 +18,12 @@
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
-#include<fcntl.h>
+#include <fcntl.h>
 
 #define COMMAND_RUN "run"
 
 #define MAXARGS 3
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 256
 
 void waitForChild(vector_t *children) {
     while (1) {
@@ -105,9 +105,7 @@ int main (int argc, char** argv) {
     while (1) {
         int numArgs, selected;
         int max; /* stores highest file descriptor*/
-        int stdin; /* stdin file descriptor */
-
-        stdin = fileno(stdin);
+		int stdin = STDIN_FILENO;
 
         if (fshell > stdin) /* determines which files descriptor is the highest */
             max = fshell + 1;
@@ -119,21 +117,28 @@ int main (int argc, char** argv) {
 
         selected = select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
 
-        if (selected == -1 || selected == 0) { 
+        if (selected == -1 || selected == 0) {
             perror("Error reading instructions.");
             exit(EXIT_FAILURE);
         }
         else {
             if (FD_ISSET(stdin, &fdset)) {
                 scanf("%s", buffer);
+				numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
             }
             if (FD_ISSET(fshell, &fdset)) {
+				read(fshell, buffer, BUFFER_SIZE);
                 numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
             }
+
+			if (numArgs == -1) {
+				perror("Error reading instructions.");
+				exit(EXIT_FAILURE);
+			}
         }
 
 
-        if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0){
+        if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0) {
             int pid;
             if (numArgs < 2) {
                 printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
@@ -158,21 +163,21 @@ int main (int argc, char** argv) {
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
                 char *newArgs[3] = {seqsolver, args[1], NULL};
 
-                execv(seqsolver, newArgs); /* if main returned 0, then all ok */
+                execv(seqsolver, newArgs);
                 perror("Error while executing child process"); /* Not supposed to get here */
                 exit(EXIT_FAILURE);
             }
         }
 
-        else if (numArgs == 0){
-            /* No argument, ignores and asks again */
-            continue;
-        }
-        else
-            printf("Command not supported.\n");
+        else if (numArgs == 0)
+            continue;  /* No argument, ignores and asks again */
+
+		else
+			printf("Command not supported.\n");
 
     }
 
+	/*
     for (int i = 0; i < vector_getSize(children); i++) {
         free(vector_at(children, i));
     }
@@ -180,7 +185,7 @@ int main (int argc, char** argv) {
 
     close(fshell);
     if (unlink("../tmp/AdvShell.pipe") < 0)
-        exit(-1); /* errno if unlink failed */
+        exit(ERROR_FAILURE);*/
 
     return EXIT_SUCCESS;
 }

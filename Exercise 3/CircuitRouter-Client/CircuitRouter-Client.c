@@ -81,14 +81,14 @@ int main(int argc, char const *argv[]) {
 
 		if (fgets(command, BUFFSIZE, stdin) != NULL) /* read command and send to advshell*/
 		{
-			strcat(command, "|");
+			strcat(command, " ");  /* Makes it so that the first argument in the command is the return pipe*/
 			strcat(command, absolutePath);
 			if (write(fshell, command, BUFFSIZE < 0)) {
 				perror("Failed to write to pipe");
-				exit(EXIT_FAILURE); 
+				exit(EXIT_FAILURE);
 			}
 			sentCommand = 1;
-		} 
+		}
 		if (sentCommand) {
 			if (read(fclient, message, BUFFSIZE) < 0){
 				perror("Failed to read from pipe");
@@ -98,7 +98,7 @@ int main(int argc, char const *argv[]) {
 		}
 	}
 
-	finishUp(); 
+	finishUp();
 
     return 0;
 }

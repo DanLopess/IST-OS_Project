@@ -14,7 +14,6 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
@@ -22,64 +21,23 @@
 
 #define BUFFSIZE 255
 
-/* global pipe names */
-char *pipeName;
-char *shellPipeName;
-int fshell;
-int fclient;
+/* global variables */
+int fshell, fclient;
+char* shellPipeName;
+char* pipeName;
 
-void exitRoutine() {
-	close(fshell); /* need to close files */
+void finishUp() {
 	close(fclient);
+	close(fshell);
 	unlink(pipeName);
-	free(pipeName); /* frees memory allocated initally */
+	free(pipeName);
 	free(shellPipeName);
-	exit(0);
 }
-
-/*
- * reads from stdin and writes to advshell pipe
- */
-void writeLoop() {
-	char command[BUFFSIZE];
-
-	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
-		fprintf(stderr, "Failed to open shell pipe");
-		exit(EXIT_FAILURE); /* error opening pipe */
-	}
-
-	while (1) /* use readLineArguments and compare ... as on advshell*/
-	{
-		if (fgets(command, BUFFSIZE, stdin) != NULL) {
-			strcat (command, "|");
-			strcat (command, pipeName);
-			write(fshell, command, BUFFSIZE);
-		}
-	}
-}
-
-/*
- * reads from own pipe and writes to stdout
- */
-void readLoop () {
-	char message[BUFFSIZE];
-
-	if ((fclient = open(pipeName, O_RDONLY)) < 0) {
-		fprintf(stderr, "Failed to open own pipe");
-		exit(EXIT_FAILURE); /* error opening pipe */
-	}
-	while (1) {
-		if (read(fclient, message, BUFFSIZE) > 0) /* if anything was read */
-			printf("%s\n", message);
-	}
-}
-
 
 int main(int argc, char const *argv[]) {
-	int pid;
-	char template[] = "../tmp/ClientXXXXXX";
-
-	signal(SIGINT, exitRoutine);
+	int fshell, fclient;
+	char template[] = "ClientXXXXXX";
+	char absolutePath[PATH_MAX + 1]; /* absolute path that is sent to advshell */
 
 	shellPipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
 	pipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
@@ -94,28 +52,53 @@ int main(int argc, char const *argv[]) {
 
 	if(strlen(pipeName) == 0) exit(EXIT_FAILURE); /* failed to generate pipeName*/
 
-	printf("pipeName: %s", pipeName);
-
-	if (unlink(pipeName) < 0) {
-		fprintf(stderr, "Error unlinking pipeName.\n");
-		exit(EXIT_FAILURE); /* errno if unlink failed */
-	}
+	unlink(pipeName);
 
 	if (mkfifo(pipeName, 0777) < 0) { /* create own namedpipe */
-		fprintf(stderr, "Error creating pipe.\n");
+		perror("Error creating own pipe");
 		exit(EXIT_FAILURE);
 	}
 
-	pid = fork();
-	if (pid == 0) {
-		readLoop();
+	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
+		perror("Failed to open shell pipe");
+		exit(EXIT_FAILURE); /* error opening pipe */
 	}
-	if (pid > 0) {
-		writeLoop();
+
+	if ((fclient = open(pipeName, O_RDONLY)) < 0) {
+		perror("Failed to open own pipe");
+		exit(EXIT_FAILURE); /* error opening pipe */
 	}
-	else {
-		exit(EXIT_FAILURE); /* failed to create child */
+
+	if(realpath(pipeName, absolutePath) == NULL) {
+		perror("Failed to obtain absolute path");
+		exit(EXIT_FAILURE);
 	}
+
+	while(1) {
+		char command[BUFFSIZE]; /* stores command being sent to advshell */
+		char message[BUFFSIZE]; /* stores response from advshell */
+		int sentCommand = 0;
+
+		if (fgets(command, BUFFSIZE, stdin) != NULL) /* read command and send to advshell*/
+		{
+			strcat(command, "|");
+			strcat(command, absolutePath);
+			if (write(fshell, command, BUFFSIZE < 0)) {
+				perror("Failed to write to pipe");
+				exit(EXIT_FAILURE); 
+			}
+			sentCommand = 1;
+		} 
+		if (sentCommand) {
+			if (read(fclient, message, BUFFSIZE) < 0){
+				perror("Failed to read from pipe");
+				exit(EXIT_FAILURE);
+			}
+			printf("%s\n", message);
+		}
+	}
+
+	finishUp(); 
 
     return 0;
 }

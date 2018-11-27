@@ -4,8 +4,6 @@
 #include "../lib/vector.h"
 #include <sys/types.h>
 
-void exitRoutine();
-void writeLoop();
-void readLoop();
+void finishUp();
 
 #endif /* CIRCUITROUTER_CLIENT_H */

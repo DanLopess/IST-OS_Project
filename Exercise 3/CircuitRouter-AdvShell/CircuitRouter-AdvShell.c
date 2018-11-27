@@ -93,13 +93,13 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    if (unlink("../tmp/AdvShell/AdvShell.pipe") < 0)
+    if (unlink("AdvShell.pipe") < 0)
         exit(-1); /* errno if unlink failed */
 
-    if (mkfifo("../tmp/AdvShell/AdvShell.pipe", 0777) < 0)
+    if (mkfifo("AdvShell.pipe", 0777) < 0)
         exit(-1); /* tries to make a new pipe */
 
-    if ((fshell = open("../tmp/AdvShell/AdvShell.pipe", O_RDONLY)) < 0) /* open pipe for reading */
+    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0) /* open pipe for reading */
         exit(-1);
 
     while (1) {
@@ -115,13 +115,13 @@ int main (int argc, char** argv) {
             max = stdin + 1;
 
         FD_SET(fshell, &fdset);  /* sets pipe for listening */
-        FD_SET(stdin, &fdset); /* sets stdin for listening, maybe not numArgs */
+        FD_SET(stdin, &fdset); /* sets stdin for listening */
 
         selected = select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
 
-        if (selected == -1 || selected == 0) { //TODO finish up
-            printf("Error reading instructions.\n");
-            exit(1);
+        if (selected == -1 || selected == 0) { 
+            perror("Error reading instructions.");
+            exit(EXIT_FAILURE);
         }
         else {
             if (FD_ISSET(stdin, &fdset)) {

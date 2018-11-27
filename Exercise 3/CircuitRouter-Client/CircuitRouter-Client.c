@@ -92,6 +92,8 @@ int main(int argc, char const *argv[]) {
 		exit(-1); /* no argument found */
 	}
 
+	
+
 	if(strcpy(pipeName, mkdtemp("../temp/ClientXXXXXX") < 0)) /* create own pipe file */
         exit(-1);
 

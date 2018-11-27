@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -19,16 +20,20 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#define BUFSIZE 255
+#define BUFFSIZE 255
 
-char *pipeName;
+/* global pipe names */
+char *pipeName; 
 char *shellPipeName;
+int fshell;
+int fclient;
 
 void exitRoutine() {
-	close(shellPipeName); /* need to close files */
-	close(pipeName);
+	close(fshell); /* need to close files */
+	close(fclient);
 	unlink(pipeName);
-	free(pipeName);
+	free(pipeName); /* frees memory allocated initally */
+	free(shellPipeName);
 	exit(0);
 }
 
@@ -36,26 +41,20 @@ void exitRoutine() {
  * reads from stdin and writes to advshell pipe 
  */
 void writeLoop() {
-	char command[BUFSIZE*2];
-	char aux[BUFSIZE];
-	int fshell;
+	char command[BUFFSIZE];
 
 	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
-		exit(-1); /* error opening pipe */
+		fprintf(stderr, "Failed to open shell pipe");
+		exit(EXIT_FAILURE); /* error opening pipe */
 	}
 
 	while (1) /* use readLineArguments and compare ... as on advshell*/
 	{
-		scanf("%s", aux);
-		if (!strcmp(aux, "run "))
-		{
-			printf("Command not supported.\n");
-			continue;
+		if (fgets(command, BUFFSIZE, stdin) != NULL) {
+			strcat (command, "|");
+			strcat (command, pipeName);
+			write(fshell, command, BUFFSIZE);
 		}
-		scanf("%s", command);
-		strcat(command, '|'); /*Separates shellPipeName from command*/
-		strcat(command, shellPipeName);
-		printf("%s", shellPipeName); /*DEBUG*/
 	}
 }
 
@@ -63,14 +62,14 @@ void writeLoop() {
  * reads from own pipe and writes to stdout 
  */
 void readLoop () {
-	char message[BUFSIZE];
-	int fclient;
+	char message[BUFFSIZE];
 
 	if ((fclient = open(pipeName, O_RDONLY)) < 0) {
-		exit(-1); /* error opening pipe */
+		fprintf(stderr, "Failed to open own pipe");
+		exit(EXIT_FAILURE); /* error opening pipe */
 	}
 	while (1) {
-		if (read(fclient, message, BUFSIZE) > 0) /* if anything was read */
+		if (read(fclient, message, BUFFSIZE) > 0) /* if anything was read */
 			printf("%s\n", message);
 	} 
 }
@@ -78,29 +77,29 @@ void readLoop () {
 
 int main(int argc, char const *argv[]) {
 	int pid;
+	char template[] = "../tmp/ClientXXXXXX";
 
 	signal(SIGINT, exitRoutine);
 
-	pipeName = (char*) malloc(sizeof(char)*BUFSIZE); /* creates a string with BUFSIZE characters */
+	shellPipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
 
-	if (pipeName == NULL) exit(-1); /* failed to allocate memory */	
-	if(argv[1] == NULL) exit(-1); /* argument must exist because it contains advshell pipename*/
+	if (shellPipeName == NULL) exit(EXIT_FAILURE); /* failed to allocate memory */	
+	if(argv[1] == NULL) exit(EXIT_FAILURE); /* argument must exist because it contains advshell pipename*/
 
 	strcpy(shellPipeName, argv[1]); /* passed verification so we can assign it to shellPipeName */
 
+	if ((pipeName = mkdtemp(template)) == NULL)
+		exit(EXIT_FAILURE); /* trying to create own pipe directory*/
 
-	if(strcpy(pipeName, mkdtemp("../temp/ClientXXXXXX") < 0)) /* create own pipe file */
-        exit(-1);
-
-    strcat(pipeName, "/client.pipe");
-
-    if (mkfifo(pipeName, 0777) < 0) {
-		printf("Error creating pipe.\n");
-        exit(-1);
-	}
+	strcat(pipeName, "/client.pipe");
 
 	if (unlink(pipeName) < 0)
-		exit(-1); /* errno if unlink failed */
+		exit(EXIT_FAILURE); /* errno if unlink failed */
+
+	if (mkfifo(pipeName, 0777) < 0) { /* create own namedpipe */
+		printf("Error creating pipe.\n");
+		exit(EXIT_FAILURE);
+	}
 
 	pid = fork();
 	if (pid == 0) {
@@ -110,7 +109,7 @@ int main(int argc, char const *argv[]) {
 		writeLoop();
 	}
 	else {
-		exit(1); 
+		exit(EXIT_FAILURE); /* failed to create child */
 	}
 
     return 0;

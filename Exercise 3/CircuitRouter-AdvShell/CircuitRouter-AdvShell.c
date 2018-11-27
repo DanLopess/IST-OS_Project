@@ -20,7 +20,6 @@
 #include <errno.h>
 #include<fcntl.h>
 
-#define COMMAND_EXIT "exit"
 #define COMMAND_RUN "run"
 
 #define MAXARGS 3
@@ -82,6 +81,7 @@ int main (int argc, char** argv) {
     vector_t *children;
     int runningChildren = 0;
     fd_set fdset;
+    int fshell;
 
     FD_ZERO(&fdset); /* fills fdset with all zero's */
 
@@ -93,20 +93,18 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    if (unlink("../tmp/AdvShell.pipe") < 0) 
+    if (unlink("../tmp/AdvShell/AdvShell.pipe") < 0) 
         exit(-1); /* errno if unlink failed */
-    
-    if (mkfifo("../tmp/AdvShell.pipe", 0777) < 0) 
+
+    if (mkfifo("../tmp/AdvShell/AdvShell.pipe", 0777) < 0)
         exit(-1); /* tries to make a new pipe */
+
+    if ((fshell = open("../tmp/AdvShell/AdvShell.pipe", O_RDONLY)) < 0) /* open pipe for reading */
+        exit(-1);
 
     while (1) {
         int numArgs;
-        int fshell;
         int max; /* stores highest file descriptor*/
-
-        if ((fshell = open("../tmp/AdvShell.pipe", O_RDONLY)) < 0)
-            exit(-1);
-
 
         /* ver sugestao do professor, utilizar o select para decidir se leio do stdin ou do pipe */
         numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
@@ -166,6 +164,7 @@ int main (int argc, char** argv) {
     }
     vector_free(children);
 
+    close(fshell);
     if (unlink("../tmp/AdvShell.pipe") < 0)
         exit(-1); /* errno if unlink failed */
 

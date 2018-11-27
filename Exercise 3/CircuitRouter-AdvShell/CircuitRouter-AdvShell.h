@@ -11,7 +11,5 @@ typedef struct {
 
 void waitForChild(vector_t *children);
 void printChildren(vector_t *children);
-void stdinParse();
-void pipeParse();
 
 #endif /* CIRCUITROUTER_SHELL_H */

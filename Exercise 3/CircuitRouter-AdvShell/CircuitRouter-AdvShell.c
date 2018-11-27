@@ -65,14 +65,6 @@ void printChildren(vector_t *children) {
     puts("END.");
 }
 
-void stdinParse() {
-
-}
-
-void pipeParse() {
-
-}
-
 int main (int argc, char** argv) {
 
     char *args[MAXARGS + 1];
@@ -106,6 +98,7 @@ int main (int argc, char** argv) {
         int numArgs, selected;
         int max; /* stores highest file descriptor*/
 		int stdin = STDIN_FILENO;
+        bool_t isClient = FALSE;
 
         if (fshell > stdin) /* determines which files descriptor is the highest */
             max = fshell + 1;
@@ -129,6 +122,8 @@ int main (int argc, char** argv) {
             if (FD_ISSET(fshell, &fdset)) {
 				read(fshell, buffer, BUFFER_SIZE);
                 numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+                if (numArgs == 3) /* make sure it has client's pipeName */
+                    isClient = TRUE;
             }
 
 			if (numArgs == -1) {
@@ -160,9 +155,13 @@ int main (int argc, char** argv) {
                 printf("%s: background child started with PID %d.\n\n", COMMAND_RUN, pid);
                 continue;
             } else {
+                
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
-                char *newArgs[3] = {seqsolver, args[1], NULL};
-
+                if (isClient) {
+                    char *newArgs[3] = {seqsolver, args[1], args[2]}; /* if read from pipe */
+                    execv(seqsolver, newArgs);
+                }
+                char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
                 execv(seqsolver, newArgs);
                 perror("Error while executing child process"); /* Not supposed to get here */
                 exit(EXIT_FAILURE);
@@ -172,8 +171,24 @@ int main (int argc, char** argv) {
         else if (numArgs == 0)
             continue;  /* No argument, ignores and asks again */
 
-		else
-			printf("Command not supported.\n");
+		else { /* command is not supported */
+            if (isClient) { /* if input is from client, then send through pipe */
+                char* pipeName = args[2];
+                int fclient;
+                char message[BUFFER_SIZE];
+
+                if ((fclient = open(pipeName, O_WRONLY)) < 0) {
+                    perror ("Failed to open pipe");
+                }
+                strcpy(message, "Command not supported.");
+                if (write(fclient, message, BUFFER_SIZE < 0))
+                {
+                    perror("Failed to write to pipe");
+                    exit(EXIT_FAILURE);
+                }
+            } else /*  just prints to stdout */
+                printf("Command not supported.\n");
+        }
 
     }
 

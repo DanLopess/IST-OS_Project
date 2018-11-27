@@ -64,6 +64,8 @@
 #include "lib/timer.h"
 #include "lib/types.h"
 
+#define BUFFSIZE 255
+
 enum param_types {
     PARAM_BENDCOST = (unsigned char)'b',
     PARAM_XCOST    = (unsigned char)'x',
@@ -79,8 +81,11 @@ enum param_defaults {
 };
 
 bool_t global_doPrint = TRUE;
+bool_t hasPipe = FALSE;
+char* pipeName = NULL;
 char* global_inputFile = NULL;
 long global_params[256]; /* 256 = ascii limit */
+
 
 
 /* =============================================================================
@@ -144,6 +149,10 @@ static void parseArgs (long argc, char* const argv[]){
     }
 
     global_inputFile = argv[optind];
+    char* pipeName = argv[optind+1]; /* after the input name , receives pipeName */
+    if(pipeName != NULL){
+        hasPipe = TRUE;
+    }
 }
 
 /* =============================================================================
@@ -221,6 +230,21 @@ int main(int argc, char** argv){
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
     assert(status == TRUE);
     fputs("Verification passed.\n",resultFp);
+
+    if (hasPipe) { /* if a pipeName was inserted, then write to pipe */
+        int fclient;
+        char message[BUFFSIZE];
+
+        unlink(pipeName);
+        if ((fclient = open(pipeName, O_WRONLY)) < 0) {
+            perror("Failed to open pipe");
+        }
+        strcpy(message, "Circuit Solved");
+        if (write(fclient, message, BUFFSIZE < 0)) {
+            perror("Failed to write to pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     maze_free(mazePtr);
     router_free(routerPtr);

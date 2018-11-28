@@ -5,27 +5,21 @@ This exercise has an Advanced Shell and a Client program. Multiple clients can s
 shell, which will then execute the commands (through SeqSolver)
 
 ### Version 1.0
-- 
+- Part 1 of the project is completed. All is working fine. 
+- Multiple clients are able to talk to AdvShell without any problem
+
+### Version 2.0
+-
 
 ### Directories structure
 `
 EX2
-├── doTest.sh
 ├── Makefile
 ├── README.md
-├── CircuitRouter-ParSolver
-│	├── CircuitRouter-ParSolver.c
-│	├── coordinate.c
-│	├── coordinate.h
-│	├── grid.c
-│	├── grid.h
-│	├── lock.c
-│	├── lock.h
-│	├── Makefile
-│	├── maze.c
-│	├── maze.h
-│	├── router.c
-│	└── router.h
+├── CircuitRouter-AdvShell
+│	├── CircuitRouter-AdvShell.c
+│	├── CircuitRouter-AdvShell.h
+│	└── Makefile
 ├── CircuitRouter-SeqSolver
 │	├── CircuitRouter-SeqSolver.c
 │	├── coordinate.c
@@ -65,19 +59,6 @@ EX2
 │	├── utility.h
 │	├── vector.c
 │	└── vector.h
-└── results
-│	├── random-x128-y128-z3-n128.txt.speedup.csv
-│	├── random-x128-y128-z3-n64.txt.speedup.csv
-│	├── random-x128-y128-z5-n128.txt.speedup.csv
-│	├── random-x256-y256-z3-n256.txt.speedup.csv
-│	├── random-x256-y256-z5-n256.txt.speedup.csv
-│	├── random-x512-y512-z7-n512.txt.speedup.csv
-│	├── random-x32-y32-z3-n64.txt.speedup.csv
-│	├── random-x32-y32-z3-n96.txt.speedup.csv
-│	├── random-x48-y48-z3-n48.txt.speedup.csv
-│	├── random-x48-y48-z3-n64.txt.speedup.csv
-│	├── random-x64-y64-z3-n48.txt.speedup.csv
-│	└── random-x64-y64-z3-n64.txt.speedup.csv
 └──
 `
 
@@ -86,19 +67,18 @@ EX2
 - 1: open bash shell (terminal)
 - 2: write cd EX2 (root_directory path)
 - 3: write "make"
-- 4a (command line):
+- 4:
 		- write cd CircuitRouter-ParSolver
 		- write "./CircuitRouter-ParSolver -t $(numberOfThreads) $inputFileName"
 		- write cd ..
-- 4b (doTest.sh):
-		- write "./doTest.sh $(numberOfThreads) $inputFileName"
+
 - 5: write "make clean"
 - 6: close bash shell
 `
-Note: While obtaining the results files, an 8-core cpu with hyperthreading was used, making a total of 16 threads, cpu description will be down below.
 
 ### Testing
 All testing was performed and executed in the machine whose specs are down below.
+For assignment purposes, testing was also done in Sigma Environment (Lab's computers)
 
 ### Specs
 - Operating System Information

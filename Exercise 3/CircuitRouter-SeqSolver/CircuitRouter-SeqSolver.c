@@ -236,7 +236,7 @@ int main(int argc, char** argv){
         char message[BUFFSIZE];
 
         unlink(pipeName);
-        if ((fclient = open(pipeName, O_WRONLY)) < 0) {
+        if ((fclient = open(pipeName, O_RDWR)) < 0) {
             perror("Failed to open pipe");
         }
         strcpy(message, "Circuit Solved");
@@ -245,6 +245,7 @@ int main(int argc, char** argv){
             exit(EXIT_FAILURE);
         }
         close(fclient);
+				puts("here\n"); /* DEBUG */
     }
 
     maze_free(mazePtr);

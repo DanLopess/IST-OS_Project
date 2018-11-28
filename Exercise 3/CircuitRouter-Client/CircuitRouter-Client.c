@@ -1,7 +1,6 @@
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
-// AdvShell works as a client in a namedpipe
 */
 
 #include "../lib/commandlinereader.h"
@@ -37,7 +36,6 @@ void finishUp() {
 int main(int argc, char const *argv[]) {
 	int fshell, fclient;
 	char template[] = "/tmp/ClientXXXXXX";
-	char absolutePath[PATH_MAX + 1]; /* absolute path that is sent to advshell */
 
 	shellPipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
 	pipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
@@ -59,38 +57,35 @@ int main(int argc, char const *argv[]) {
 		perror("Error creating own pipe");
 		exit(EXIT_FAILURE);
 	}
-
 	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
 		perror("Failed to open shell pipe");
 		exit(EXIT_FAILURE); /* error opening pipe */
 	}
 
-	if ((fclient = open(pipeName, O_RDONLY)) < 0) {
+	if ((fclient = open(pipeName, O_RDWR)) < 0) {
 		perror("Failed to open own pipe");
 		exit(EXIT_FAILURE); /* error opening pipe */
 	}
 
-	if(realpath(pipeName, absolutePath) == NULL) {
-		perror("Failed to obtain absolute path");
-		exit(EXIT_FAILURE);
-	}
 
 	while(1) {
-		char command[BUFFSIZE+PATH_MAX]; /* stores command being sent to advshell */
+		char command[BUFFSIZE]; /* stores command being sent to advshell */
 		char message[BUFFSIZE]; /* stores response from advshell */
 		int sentCommand = 0;
 
-		if (fgets(command, BUFFSIZE, stdin) != NULL) /* read command and send to advshell*/
-		{
-			strcat(command, " ");  /* Makes it so that the first argument in the command is the return pipe*/
-			strcat(command, absolutePath);
-			if (write(fshell, command, BUFFSIZE+PATH_MAX) < 0) {
+		if (fgets(command, BUFFSIZE, stdin) != NULL) {  /* read command and send to advshell*/
+			strtok(command, "\n"); /*removes \n from string*/
+			strcat(command, " ");  /* makes it so that the first argument in the command is the return pipe*/
+			strcat(command, pipeName);
+
+			if (write(fshell, command, BUFFSIZE) < 0) {
 				perror("Failed to write to pipe");
 				exit(EXIT_FAILURE);
 			}
 			sentCommand = 1;
 		}
 		if (sentCommand) {
+			printf("entered here\n");
 			if (read(fclient, message, BUFFSIZE) < 0){
 				perror("Failed to read from pipe");
 				exit(EXIT_FAILURE);

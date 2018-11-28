@@ -1,7 +1,6 @@
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
-// AdvShell works as a server in a namedpipe
 */
 
 #include "../lib/commandlinereader.h"
@@ -108,6 +107,22 @@ void initiateShellPipe() {
     }
 }
 
+void sendNotSupported(char* pipeName) {
+    int fclient;
+		char message[BUFFER_SIZE];
+    if ((fclient = open(pipeName, O_RDWR)) < 0) {
+        perror ("Failed to open pipe");
+    }
+
+    strcpy(message, "Command not supported.");
+    if (write(fclient, message, BUFFER_SIZE) < 0) {
+        perror("Failed to write to pipe");
+        exit(EXIT_FAILURE);
+    }
+		puts(message);
+    close(fclient);
+}
+
 void finishUp(vector_t *children){
     for (int i = 0; i < vector_getSize(children); i++)
     {
@@ -119,10 +134,43 @@ void finishUp(vector_t *children){
     unlink(PIPENAME);
 }
 
+/*
+* Function similar to readLineArguments but is used to parse arguments
+* from a given buffer
+*/
+int readFromPipe(char **argVector, int vectorSize, char *buffer) {
+	int numTokens = 0;
+  char *s = " \r\n\t";
+
+  int i;
+
+  char *token;
+
+  if (argVector == NULL || buffer == NULL || vectorSize <= 0)
+     return 0;
+
+  /* get the first token */
+  token = strtok(buffer, s);
+
+  /* walk through other tokens */
+  while( numTokens < vectorSize-1 && token != NULL ) {
+    argVector[numTokens] = token;
+    numTokens ++;
+
+    token = strtok(NULL, s);
+  }
+
+  for (i = numTokens; i<vectorSize; i++) {
+    argVector[i] = NULL;
+  }
+
+  return numTokens;
+}
+
 int main (int argc, char** argv) {
 
     char *args[MAXARGS + 1];
-    char buffer[BUFFER_SIZE+PATH_MAX];
+    char buffer[BUFFER_SIZE];
     int MAXCHILDREN = -1;
     vector_t *children;
     int runningChildren = 0;
@@ -152,11 +200,11 @@ int main (int argc, char** argv) {
         }
         if (FD_ISSET(fshell, &fdset)) {
             read(fshell, buffer, BUFFER_SIZE);
-            numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
-            if (numArgs == 3) /* make sure it has client's pipeName */
+            numArgs = readFromPipe(args, MAXARGS+1, buffer);
+            if (numArgs == 3)  {/* make sure it has client's pipeName */
                 isClient = TRUE;
-            else {
-                perror("No enough arguments.");
+            }else {
+				sendNotSupported(args[numArgs-1]);
                 continue; /* if no return parameter is found, then ignores this client command */
             }
         }
@@ -204,10 +252,9 @@ int main (int argc, char** argv) {
                 printf("%s: background child started with PID %d.\n", COMMAND_RUN, pid);
                 continue;
             } else {
-
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
                 if (isClient) {
-                    char *newArgs[3] = {seqsolver, args[1], args[2]}; /* if read from pipe */
+                    char *newArgs[4] = {seqsolver, args[1], args[numArgs-1], NULL}; /* if read from pipe */
                     execv(seqsolver, newArgs);
                 } else {
                     char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
@@ -222,23 +269,11 @@ int main (int argc, char** argv) {
             continue;  /* No argument, ignores and asks again */
 
 		else { /* command is not supported */
-            if (isClient) { /* if input is from client, then send through pipe */
-                char* pipeName = args[2];
-                int fclient;
-                char message[BUFFER_SIZE];
+            if (isClient) /* if input is from client, then send through pipe */
+				sendNotSupported(args[numArgs-1]);
+			else /*  just prints to stdout */
+		    	printf("Command not supported.\n");
 
-                if ((fclient = open(pipeName, O_WRONLY)) < 0) {
-                    perror ("Failed to open pipe");
-                }
-                strcpy(message, "Command not supported.");
-                if (write(fclient, message, BUFFER_SIZE < 0))
-                {
-                    perror("Failed to write to pipe");
-                    exit(EXIT_FAILURE);
-                }
-                close(fclient);
-            } else /*  just prints to stdout */
-                printf("Command not supported.\n");
         }
 
     }

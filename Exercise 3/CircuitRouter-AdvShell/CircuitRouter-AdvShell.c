@@ -87,11 +87,15 @@ int main (int argc, char** argv) {
 
     unlink("AdvShell.pipe");
 
-    if (mkfifo("AdvShell.pipe", 0777) < 0)
-        exit(-1); /* tries to make a new pipe */
+    if (mkfifo("AdvShell.pipe", 0777) < 0){
+        perror("Failed to create pipe");
+        exit(EXIT_FAILURE); /* tries to make a new pipe */
+    }
 
-    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0) /* open pipe for reading */
-        exit(-1);
+    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0) {
+        perror("Failed to open pipe");
+        exit(EXIT_FAILURE);
+    }
 
     while (1) {
         int numArgs, selected;
@@ -159,9 +163,10 @@ int main (int argc, char** argv) {
                 if (isClient) {
                     char *newArgs[3] = {seqsolver, args[1], args[2]}; /* if read from pipe */
                     execv(seqsolver, newArgs);
+                } else {
+                    char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
+                    execv(seqsolver, newArgs);
                 }
-                char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
-                execv(seqsolver, newArgs);
                 perror("Error while executing child process"); /* Not supposed to get here */
                 exit(EXIT_FAILURE);
             }

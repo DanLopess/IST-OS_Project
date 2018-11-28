@@ -116,7 +116,7 @@ void finishUp(vector_t *children){
     vector_free(children);
 
     close(fshell);
-    unlink("AdvShell.pipe");
+    unlink(PIPENAME);
 }
 
 int main (int argc, char** argv) {

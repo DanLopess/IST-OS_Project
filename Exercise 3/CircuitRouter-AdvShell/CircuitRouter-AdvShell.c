@@ -101,7 +101,7 @@ void initiateShellPipe() {
         exit(EXIT_FAILURE); /* tries to make a new pipe */
     }
 
-    if ((fshell = open(PIPENAME, O_RDONLY)) < 0)
+    if ((fshell = open(PIPENAME, O_RDWR)) < 0)
     {
         perror("Failed to open pipe");
         exit(EXIT_FAILURE);
@@ -148,7 +148,6 @@ int main (int argc, char** argv) {
         waitForInput(&fdset);
 
         if (FD_ISSET(stdin, &fdset)) {
-            scanf("%s", buffer);
             numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
         }
         if (FD_ISSET(fshell, &fdset)) {
@@ -167,7 +166,7 @@ int main (int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
 
-        if (isClient == FALSE && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
+        if (!isClient && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
         {
             printf("CircuitRouter-AdvShell will exit.\n--\n");
 

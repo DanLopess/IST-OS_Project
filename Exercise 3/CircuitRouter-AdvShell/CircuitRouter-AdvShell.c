@@ -201,7 +201,7 @@ int main (int argc, char** argv) {
 
             if (pid > 0) {
                 runningChildren++;
-                printf("%s: background child started with PID %d.\n\n", COMMAND_RUN, pid);
+                printf("%s: background child started with PID %d.\n", COMMAND_RUN, pid);
                 continue;
             } else {
 

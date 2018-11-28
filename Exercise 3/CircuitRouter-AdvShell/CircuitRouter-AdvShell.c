@@ -85,8 +85,7 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    if (unlink("AdvShell.pipe") < 0)
-        exit(-1); /* errno if unlink failed */
+    unlink("AdvShell.pipe");
 
     if (mkfifo("AdvShell.pipe", 0777) < 0)
         exit(-1); /* tries to make a new pipe */
@@ -199,8 +198,7 @@ int main (int argc, char** argv) {
     vector_free(children);
 
     close(fshell);
-    if (unlink("../tmp/AdvShell.pipe") < 0)
-        exit(ERROR_FAILURE);*/
-
+    unlink("AdvShell.pipe");
+    */
     return EXIT_SUCCESS;
 }

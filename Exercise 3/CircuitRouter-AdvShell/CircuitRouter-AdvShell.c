@@ -21,9 +21,12 @@
 #include <fcntl.h>
 
 #define COMMAND_RUN "run"
+#define COMMAND_EXIT "exit"
 
 #define MAXARGS 3
 #define BUFFER_SIZE 256
+
+int fshell;
 
 void waitForChild(vector_t *children) {
     while (1) {
@@ -65,17 +68,65 @@ void printChildren(vector_t *children) {
     puts("END.");
 }
 
+void waitForInput(fd_set *fdset) {
+    int selected;
+    int max; /* stores highest file descriptor*/
+    int stdin = STDIN_FILENO;
+
+    if (fshell > stdin) /* determines which files descriptor is the highest */
+        max = fshell + 1;
+    else
+        max = stdin + 1;
+
+    FD_SET(fshell, fdset); /* sets pipe for listening */
+    FD_SET(stdin, fdset);  /* sets stdin for listening */
+
+    selected = select(max, fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
+
+    if (selected == -1 || selected == 0)
+    {
+        perror("Error reading instructions.");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void initiateShellPipe() {
+    unlink("AdvShell.pipe");
+
+    if (mkfifo("AdvShell.pipe", 0777) < 0)
+    {
+        perror("Failed to create pipe");
+        exit(EXIT_FAILURE); /* tries to make a new pipe */
+    }
+
+    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0)
+    {
+        perror("Failed to open pipe");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void finishUp(vector_t *children){
+    for (int i = 0; i < vector_getSize(children); i++)
+    {
+        free(vector_at(children, i));
+    }
+    vector_free(children);
+
+    close(fshell);
+    unlink("AdvShell.pipe");
+}
+
 int main (int argc, char** argv) {
 
     char *args[MAXARGS + 1];
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE+PATH_MAX];
     int MAXCHILDREN = -1;
     vector_t *children;
     int runningChildren = 0;
-    fd_set fdset;
-    int fshell;
+    fd_set *fdset;
 
-    FD_ZERO(&fdset); /* fills fdset with all zero's */
+    FD_ZERO(fdset); /* fills fdset with all zero's */
 
     if(argv[1] != NULL){
         MAXCHILDREN = atoi(argv[1]);
@@ -85,56 +136,50 @@ int main (int argc, char** argv) {
 
     printf("Welcome to CircuitRouter-AdvShell\n\n");
 
-    unlink("AdvShell.pipe");
-
-    if (mkfifo("AdvShell.pipe", 0777) < 0){
-        perror("Failed to create pipe");
-        exit(EXIT_FAILURE); /* tries to make a new pipe */
-    }
-
-    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0) {
-        perror("Failed to open pipe");
-        exit(EXIT_FAILURE);
-    }
+    initiateShellPipe();
 
     while (1) {
-        int numArgs, selected;
-        int max; /* stores highest file descriptor*/
-		int stdin = STDIN_FILENO;
+        int numArgs;
+        int stdin = STDIN_FILENO;
         bool_t isClient = FALSE;
 
-        if (fshell > stdin) /* determines which files descriptor is the highest */
-            max = fshell + 1;
-        else
-            max = stdin + 1;
+        waitForInput(fdset);
 
-        FD_SET(fshell, &fdset);  /* sets pipe for listening */
-        FD_SET(stdin, &fdset); /* sets stdin for listening */
+        if (FD_ISSET(stdin, fdset)) {
+            scanf("%s", buffer);
+            numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+        }
+        if (FD_ISSET(fshell, fdset)) {
+            read(fshell, buffer, BUFFER_SIZE);
+            numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
+            if (numArgs == 3) /* make sure it has client's pipeName */
+                isClient = TRUE;
+            else {
+                perror("No enough arguments.");
+                continue; /* if no return parameter is found, then ignores this client command */
+            }
+        }
 
-        selected = select(max, &fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
-
-        if (selected == -1 || selected == 0) {
+        if (numArgs == -1) {
             perror("Error reading instructions.");
             exit(EXIT_FAILURE);
         }
-        else {
-            if (FD_ISSET(stdin, &fdset)) {
-                scanf("%s", buffer);
-				numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
-            }
-            if (FD_ISSET(fshell, &fdset)) {
-				read(fshell, buffer, BUFFER_SIZE);
-                numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
-                if (numArgs == 3) /* make sure it has client's pipeName */
-                    isClient = TRUE;
+
+        if (isClient == FALSE && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
+        {
+            printf("CircuitRouter-AdvShell will exit.\n--\n");
+
+            /* Espera pela terminacao de cada filho */
+            while (runningChildren > 0)
+            {
+                waitForChild(children);
+                runningChildren--;
             }
 
-			if (numArgs == -1) {
-				perror("Error reading instructions.");
-				exit(EXIT_FAILURE);
-			}
+            printChildren(children);
+            printf("--\nCircuitRouter-AdvShell ended.\n");
+            break;
         }
-
 
         if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0) {
             int pid;
@@ -190,20 +235,15 @@ int main (int argc, char** argv) {
                     perror("Failed to write to pipe");
                     exit(EXIT_FAILURE);
                 }
+                close(fclient);
             } else /*  just prints to stdout */
                 printf("Command not supported.\n");
         }
 
     }
 
-	/*
-    for (int i = 0; i < vector_getSize(children); i++) {
-        free(vector_at(children, i));
-    }
-    vector_free(children);
+    /* finish up */
+    finishUp(children);
 
-    close(fshell);
-    unlink("AdvShell.pipe");
-    */
     return EXIT_SUCCESS;
 }

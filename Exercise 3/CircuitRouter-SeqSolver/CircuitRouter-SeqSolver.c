@@ -244,6 +244,7 @@ int main(int argc, char** argv){
             perror("Failed to write to pipe");
             exit(EXIT_FAILURE);
         }
+        close(fclient);
     }
 
     maze_free(mazePtr);

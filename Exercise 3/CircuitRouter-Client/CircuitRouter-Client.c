@@ -75,7 +75,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 	while(1) {
-		char command[BUFFSIZE]; /* stores command being sent to advshell */
+		char command[BUFFSIZE+PATH_MAX]; /* stores command being sent to advshell */
 		char message[BUFFSIZE]; /* stores response from advshell */
 		int sentCommand = 0;
 
@@ -83,7 +83,7 @@ int main(int argc, char const *argv[]) {
 		{
 			strcat(command, " ");  /* Makes it so that the first argument in the command is the return pipe*/
 			strcat(command, absolutePath);
-			if (write(fshell, command, BUFFSIZE < 0)) {
+			if (write(fshell, command, BUFFSIZE+PATH_MAX) < 0) {
 				perror("Failed to write to pipe");
 				exit(EXIT_FAILURE);
 			}

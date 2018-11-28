@@ -11,7 +11,7 @@ typedef struct {
 
 void waitForChild(vector_t *children);
 void printChildren(vector_t *children);
-void waitForInput(fd_set *fdset);
+void waitForInput(fd_set* fdset);
 void initiateShellPipe();
 void finishUp(vector_t *children);
 

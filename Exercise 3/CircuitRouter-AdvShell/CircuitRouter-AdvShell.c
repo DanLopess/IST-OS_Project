@@ -72,6 +72,7 @@ void waitForInput(fd_set *fdset) {
     int selected;
     int max; /* stores highest file descriptor*/
     int stdin = STDIN_FILENO;
+	FD_ZERO(fdset);
 
     if (fshell > stdin) /* determines which files descriptor is the highest */
         max = fshell + 1;
@@ -124,9 +125,9 @@ int main (int argc, char** argv) {
     int MAXCHILDREN = -1;
     vector_t *children;
     int runningChildren = 0;
-    fd_set *fdset;
+    fd_set fdset;
 
-    FD_ZERO(fdset); /* fills fdset with all zero's */
+	FD_ZERO(&fdset); /* fills fdset with all zero's */
 
     if(argv[1] != NULL){
         MAXCHILDREN = atoi(argv[1]);
@@ -143,13 +144,13 @@ int main (int argc, char** argv) {
         int stdin = STDIN_FILENO;
         bool_t isClient = FALSE;
 
-        waitForInput(fdset);
+        waitForInput(&fdset);
 
-        if (FD_ISSET(stdin, fdset)) {
+        if (FD_ISSET(stdin, &fdset)) {
             scanf("%s", buffer);
             numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
         }
-        if (FD_ISSET(fshell, fdset)) {
+        if (FD_ISSET(fshell, &fdset)) {
             read(fshell, buffer, BUFFER_SIZE);
             numArgs = readLineArguments(args, MAXARGS+1, buffer, BUFFER_SIZE);
             if (numArgs == 3) /* make sure it has client's pipeName */
@@ -203,7 +204,7 @@ int main (int argc, char** argv) {
                 printf("%s: background child started with PID %d.\n\n", COMMAND_RUN, pid);
                 continue;
             } else {
-                
+
                 char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
                 if (isClient) {
                     char *newArgs[3] = {seqsolver, args[1], args[2]}; /* if read from pipe */

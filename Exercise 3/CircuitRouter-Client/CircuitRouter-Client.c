@@ -36,7 +36,7 @@ void finishUp() {
 
 int main(int argc, char const *argv[]) {
 	int fshell, fclient;
-	char template[] = "ClientXXXXXX";
+	char template[] = "/tmp/ClientXXXXXX";
 	char absolutePath[PATH_MAX + 1]; /* absolute path that is sent to advshell */
 
 	shellPipeName = (char *)malloc(sizeof(char) * BUFFSIZE);
@@ -45,6 +45,7 @@ int main(int argc, char const *argv[]) {
 	if (shellPipeName == NULL) exit(EXIT_FAILURE); /* failed to allocate memory */
 	if (pipeName == NULL) exit(EXIT_FAILURE); /* failed to allocate memory */
 	if(argv[1] == NULL) exit(EXIT_FAILURE); /* argument must exist because it contains advshell pipename*/
+
 
 	strcpy(shellPipeName, argv[1]); /* passed verification so we can assign it to shellPipeName */
 

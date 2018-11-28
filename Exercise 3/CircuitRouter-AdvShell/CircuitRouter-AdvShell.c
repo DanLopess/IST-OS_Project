@@ -22,6 +22,7 @@
 
 #define COMMAND_RUN "run"
 #define COMMAND_EXIT "exit"
+#define PIPENAME "/tmp/AdvShell.pipe"
 
 #define MAXARGS 3
 #define BUFFER_SIZE 256
@@ -92,15 +93,15 @@ void waitForInput(fd_set *fdset) {
 }
 
 void initiateShellPipe() {
-    unlink("AdvShell.pipe");
+    unlink(PIPENAME);
 
-    if (mkfifo("AdvShell.pipe", 0777) < 0)
+    if (mkfifo(PIPENAME, 0777) < 0)
     {
         perror("Failed to create pipe");
         exit(EXIT_FAILURE); /* tries to make a new pipe */
     }
 
-    if ((fshell = open("AdvShell.pipe", O_RDONLY)) < 0)
+    if ((fshell = open(PIPENAME, O_RDONLY)) < 0)
     {
         perror("Failed to open pipe");
         exit(EXIT_FAILURE);

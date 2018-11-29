@@ -5,6 +5,7 @@
 
 #include "../lib/commandlinereader.h"
 #include "../lib/vector.h"
+#include "../lib/timer.h"
 #include "CircuitRouter-AdvShell.h"
 #include <stdio.h>
 #include <sys/types.h>
@@ -27,27 +28,43 @@
 #define BUFFER_SIZE 256
 
 int fshell;
+int MAXCHILDREN = -1;
+vector_t *children;
+int runningChildren = 0;
 
 void waitForChild(vector_t *children) {
     while (1) {
+        int i;
         child_t *child = malloc(sizeof(child_t));
-        if (child == NULL) {
+        if (child == NULL)
+        {
             perror("Error allocating memory");
             exit(EXIT_FAILURE);
         }
         child->pid = wait(&(child->status));
-        if (child->pid < 0) {
-            if (errno == EINTR) {
+        if (child->pid < 0)
+        {
+            if (errno == EINTR)
+            {
                 /* Este codigo de erro significa que chegou signal que interrompeu a espera
                    pela terminacao de filho; logo voltamos a esperar */
                 free(child);
                 continue;
-            } else {
+            }
+            else
+            {
                 perror("Unexpected error while waiting for child.");
-                exit (EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
         }
-        vector_pushBack(children, child);
+        for (i = 0; i < vector_getSize(children); i++) {
+            child_t *childTemp = vector_at(children, i);
+            if (childTemp->pid == child->pid)
+            {
+                childTemp->status = child->status;
+            }
+        }
+
         return;
     }
 }
@@ -57,18 +74,24 @@ void printChildren(vector_t *children) {
         child_t *child = vector_at(children, i);
         int status = child->status;
         pid_t pid = child->pid;
+        TIMER_T time1,time2;
+
+        time1 = child->time1;
+        time2 = child->time2;
+
         if (pid != -1) {
             const char* ret = "NOK";
             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                 ret = "OK";
             }
-            printf("CHILD EXITED: (PID=%d; return %s)\n", pid, ret);
+            printf("CHILD EXITED: (PID=%d; return %s; %ds)\n", pid, ret, (int)TIMER_DIFF_SECONDS(time1,time2));
         }
     }
     puts("END.");
 }
 
-void waitForInput(fd_set *fdset) {
+/*returns 1 if all ok, returns 0 if must redo while */
+int waitForInput(fd_set *fdset) {
     int selected;
     int max; /* stores highest file descriptor*/
     int stdin = STDIN_FILENO;
@@ -86,9 +109,9 @@ void waitForInput(fd_set *fdset) {
 
     if (selected == -1 || selected == 0)
     {
-        perror("Error reading instructions.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
+    return 1;
 }
 
 void initiateShellPipe() {
@@ -133,13 +156,114 @@ void finishUp(vector_t *children){
     unlink(PIPENAME);
 }
 
-int main (int argc, char** argv) {
+/* returns 1 if break while, 0 if continue */
+int exec_command(char** args, int control, int numArgs) {
+    /* control = 0, exec from stdin, control = 1, exec from pipe */
+    if (numArgs == -1)
+    {
+        perror("Error reading instructions.");
+        exit(EXIT_FAILURE);
+    }
 
-    char *args[MAXARGS + 1];
-    char buffer[BUFFER_SIZE];
-    int MAXCHILDREN = -1;
-    vector_t *children;
-    int runningChildren = 0;
+    if (!control && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
+    {
+        printf("CircuitRouter-AdvShell will exit.\n--\n");
+
+        /* Espera pela terminacao de cada filho */
+        while (runningChildren > 0)
+        {
+            waitForChild(children);
+            runningChildren--;
+        }
+
+        printChildren(children);
+        printf("--\nCircuitRouter-AdvShell ended.\n");
+        return 1;
+        
+    }
+
+    if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0)
+    {
+        if (numArgs < 2)
+        {
+            printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
+            return 0;
+        }
+        if (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN)
+        {
+            waitForChild(children);
+            runningChildren--;
+        }
+
+        child_t *child = malloc(sizeof(child_t));
+        if (child == NULL) {
+            perror("Error allocating memory");
+            exit(EXIT_FAILURE);
+        }
+        child->pid = fork();
+        if (child->pid < 0)
+        {
+            perror("Failed to create new process.");
+            exit(EXIT_FAILURE);
+        }
+
+        if (child->pid > 0)
+        {
+            if (TIMER_READ(child->time1) < 0)
+            {
+                perror("Failed to obtain time.");
+                exit(EXIT_FAILURE);
+            }
+            runningChildren++;
+            vector_pushBack(children, child);
+            printf("%s: background child started with PID %d.\n", COMMAND_RUN, child->pid);
+            return 0;
+        }
+        else
+        {
+            char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
+            if (control)
+            {
+                char *newArgs[4] = {seqsolver, args[1], args[numArgs - 1], NULL}; /* if read from pipe */
+                execv(seqsolver, newArgs);
+            }
+            else
+            {
+                char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
+                execv(seqsolver, newArgs);
+            }
+            perror("Error while executing child process"); /* Not supposed to get here */
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    else if (numArgs == 0)
+        return 0; /* No argument, ignores and asks again */
+
+    else
+    {                 /* command is not supported */
+        if (control) /* if input is from client, then send through pipe */
+            sendNotSupported(args[numArgs - 1]);
+        else /*  just prints to stdout */
+            printf("Command not supported.\n");
+    }
+    return 0;
+}
+
+void handler(int sig) {
+    child_t *child; // ... access child with the pid that finished
+    // atribute the time2...
+    if (TIMER_READ(child->time2) < 0)
+    {
+        perror("Failed to obtain time.");
+        exit(EXIT_FAILURE);
+    }
+}
+
+int main (int argc, char** argv) {
+    signal(SIGCHLD, handler);
+    char *args[MAXARGS + 1], *args1[MAXARGS+1];
+    char buffer[BUFFER_SIZE], buffer1[BUFFER_SIZE];
     fd_set fdset;
 
 	FD_ZERO(&fdset); /* fills fdset with all zero's */
@@ -155,94 +279,33 @@ int main (int argc, char** argv) {
     initiateShellPipe();
 
     while (1) {
-        int numArgs;
         int stdin = STDIN_FILENO;
-        bool_t isClient = FALSE;
 
-        waitForInput(&fdset);
+        if(!waitForInput(&fdset))
+            continue;
 
         if (FD_ISSET(stdin, &fdset)) {
-            numArgs = readLineArguments(0,args, MAXARGS+1, buffer, BUFFER_SIZE); /* function was changed
+            int numArgs;
+            numArgs = readLineArguments(0,args1, MAXARGS+1, buffer, BUFFER_SIZE); /* function was changed
             to support extra arguments (int control) */
+            if(exec_command(args1, 0, numArgs))
+                break;
+            else 
+                continue;
         }
         if (FD_ISSET(fshell, &fdset)) {
-            read(fshell, buffer, BUFFER_SIZE);
-            numArgs = readLineArguments(1,args, MAXARGS + 1, buffer, BUFFER_SIZE);
+            read(fshell, buffer1, BUFFER_SIZE);
+            int numArgs = readLineArguments(1,args, MAXARGS + 1, buffer1, BUFFER_SIZE);
             if (numArgs == 3)  {/* make sure it has client's pipeName */
-                isClient = TRUE;
+                if(exec_command(args,1,numArgs)) /* returned 1 then must leave while */
+                    break;
+                else
+                    continue; /* returned 0 then must go to the start of while*/
             }else {
 				sendNotSupported(args[numArgs-1]);
                 continue; /* if no return parameter is found, then ignores this client command */
             }
         }
-
-        if (numArgs == -1) {
-            perror("Error reading instructions.");
-            exit(EXIT_FAILURE);
-        }
-
-        if (!isClient && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
-        {
-            printf("CircuitRouter-AdvShell will exit.\n--\n");
-
-            /* Espera pela terminacao de cada filho */
-            while (runningChildren > 0)
-            {
-                waitForChild(children);
-                runningChildren--;
-            }
-
-            printChildren(children);
-            printf("--\nCircuitRouter-AdvShell ended.\n");
-            break;
-        }
-
-        if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0) {
-            int pid;
-            if (numArgs < 2) {
-                printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
-                continue;
-            }
-            if (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN) {
-                waitForChild(children);
-                runningChildren--;
-            }
-
-            pid = fork();
-            if (pid < 0) {
-                perror("Failed to create new process.");
-                exit(EXIT_FAILURE);
-            }
-
-            if (pid > 0) {
-                runningChildren++;
-                printf("%s: background child started with PID %d.\n", COMMAND_RUN, pid);
-                continue;
-            } else {
-                char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
-                if (isClient) {
-                    char *newArgs[4] = {seqsolver, args[1], args[numArgs-1], NULL}; /* if read from pipe */
-                    execv(seqsolver, newArgs);
-                } else {
-                    char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
-                    execv(seqsolver, newArgs);
-                }
-                perror("Error while executing child process"); /* Not supposed to get here */
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        else if (numArgs == 0)
-            continue;  /* No argument, ignores and asks again */
-
-		else { /* command is not supported */
-            if (isClient) /* if input is from client, then send through pipe */
-				sendNotSupported(args[numArgs-1]);
-			else /*  just prints to stdout */
-		    	printf("Command not supported.\n");
-
-        }
-
     }
 
     /* finish up */

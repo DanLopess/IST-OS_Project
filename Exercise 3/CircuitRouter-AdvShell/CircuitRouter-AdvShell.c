@@ -46,8 +46,8 @@ void waitForChild(vector_t *children) {
         {
             if (errno == EINTR)
             {
-                /* Este codigo de erro significa que chegou signal que interrompeu a espera
-                   pela terminacao de filho; logo voltamos a esperar */
+                /* Error code means wait for child was interrupted,
+				therefore must be resumed */
                 free(child);
                 continue;
             }
@@ -87,7 +87,7 @@ void printChildren(vector_t *children) {
             if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                 ret = "OK";
             }
-            printf("CHILD EXITED: (PID=%d; return %s; %ds)\n", pid, ret, (int)TIMER_DIFF_SECONDS(time1,time2));
+            printf("CHILD EXITED: (PID=%d; return %s; %ds)\n", pid, ret, (int)TIMER_DIFF_SECONDS(time1, time2));
         }
     }
     puts("END.");
@@ -182,7 +182,7 @@ int exec_command(char** args, int control, int numArgs, vector_t *children) {
         printChildren(children);
         printf("--\nCircuitRouter-AdvShell ended.\n");
         return 1;
-        
+
     }
 
     if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0)
@@ -258,24 +258,21 @@ void handler(int sig) {
 
     child_t *child = malloc(sizeof(child_t));
 
-    if ((pid = waitpid(-1, &(child->status), WNOHANG)) < 0)
-    {
+    if ((pid = waitpid(-1, &(child->status), WNOHANG)) < 0) {
         perror("Failed to wait for child.");
         exit(EXIT_FAILURE);
     }
     child->pid = pid;
-    if (TIMER_READ(child->time2) < 0)
-    {
+    if (TIMER_READ(child->time2) < 0) {
         perror("Failed to obtain time.");
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < vector_getSize(children); i++)
-    {
+    for (int i = 0; i < vector_getSize(children); i++) {
         child_t *childTemp = vector_at(children, i);
-        if (childTemp->pid == child->pid)
-        {
+        if (childTemp->pid == child->pid) {
             childTemp->status = child->status;
+			childTemp->time1 = child->time1;
             childTemp->time2 = child->time2;
             break;
         }
@@ -291,7 +288,7 @@ int main (int argc, char** argv) {
 
     FD_ZERO(&fdset); /* fills fdset with all zero's */
 
-    if(argv[1] != NULL){
+    if(argv[1] != NULL) {
         MAXCHILDREN = atoi(argv[1]);
     }
 
@@ -313,7 +310,7 @@ int main (int argc, char** argv) {
             to support extra arguments (int control) */
             if(exec_command(args1, 0, numArgs, children))
                 break;
-            else 
+            else
                 continue;
         }
         if (FD_ISSET(fshell, &fdset)) {
@@ -324,7 +321,7 @@ int main (int argc, char** argv) {
                     break;
                 else
                     continue; /* returned 0 then must go to the start of while*/
-            }else {
+            } else {
 				sendNotSupported(args[numArgs-1]);
                 continue; /* if no return parameter is found, then ignores this client command */
             }

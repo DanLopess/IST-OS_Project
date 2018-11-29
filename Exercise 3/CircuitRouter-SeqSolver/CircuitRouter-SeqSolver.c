@@ -205,12 +205,12 @@ int main(int argc, char** argv){
 
     router_solve_arg_t routerArg = {routerPtr, mazePtr, pathVectorListPtr};
     TIMER_T startTime;
-    TIMER_READ(startTime);
+	TIMER_T stopTime;
 
+	TIMER_READ(startTime);
     router_solve((void *)&routerArg);
-
-    TIMER_T stopTime;
     TIMER_READ(stopTime);
+
 
     long numPathRouted = 0;
     list_iter_t it;

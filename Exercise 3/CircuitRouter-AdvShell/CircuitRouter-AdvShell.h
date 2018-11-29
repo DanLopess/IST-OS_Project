@@ -17,6 +17,6 @@ int waitForInput(fd_set* fdset);
 void initiateShellPipe();
 void sendNotSupported(char* pipeName);
 void finishUp(vector_t *children);
-int exec_command(char **args, int control, int numArgs);
+int exec_command(char **args, int control, int numArgs, vector_t *children);
 
 #endif /* CIRCUITROUTER_SHELL_H */

@@ -29,8 +29,8 @@
 
 int fshell;
 int MAXCHILDREN = -1;
-vector_t *children;
 int runningChildren = 0;
+vector_t *children;
 
 void waitForChild(vector_t *children) {
     while (1) {
@@ -50,6 +50,9 @@ void waitForChild(vector_t *children) {
                    pela terminacao de filho; logo voltamos a esperar */
                 free(child);
                 continue;
+            }
+            if(errno == ECHILD){
+                break;
             }
             else
             {
@@ -157,7 +160,7 @@ void finishUp(vector_t *children){
 }
 
 /* returns 1 if break while, 0 if continue */
-int exec_command(char** args, int control, int numArgs) {
+int exec_command(char** args, int control, int numArgs, vector_t *children) {
     /* control = 0, exec from stdin, control = 1, exec from pipe */
     if (numArgs == -1)
     {
@@ -251,13 +254,33 @@ int exec_command(char** args, int control, int numArgs) {
 }
 
 void handler(int sig) {
-    child_t *child; // ... access child with the pid that finished
-    // atribute the time2...
+    pid_t pid;
+
+    child_t *child = malloc(sizeof(child_t));
+
+    if ((pid = waitpid(-1, &(child->status), WNOHANG)) < 0)
+    {
+        perror("Failed to wait for child.");
+        exit(EXIT_FAILURE);
+    }
+    child->pid = pid;
     if (TIMER_READ(child->time2) < 0)
     {
         perror("Failed to obtain time.");
         exit(EXIT_FAILURE);
     }
+
+    for (int i = 0; i < vector_getSize(children); i++)
+    {
+        child_t *childTemp = vector_at(children, i);
+        if (childTemp->pid == child->pid)
+        {
+            childTemp->status = child->status;
+            childTemp->time2 = child->time2;
+            break;
+        }
+    }
+
 }
 
 int main (int argc, char** argv) {
@@ -266,7 +289,7 @@ int main (int argc, char** argv) {
     char buffer[BUFFER_SIZE], buffer1[BUFFER_SIZE];
     fd_set fdset;
 
-	FD_ZERO(&fdset); /* fills fdset with all zero's */
+    FD_ZERO(&fdset); /* fills fdset with all zero's */
 
     if(argv[1] != NULL){
         MAXCHILDREN = atoi(argv[1]);
@@ -288,7 +311,7 @@ int main (int argc, char** argv) {
             int numArgs;
             numArgs = readLineArguments(0,args1, MAXARGS+1, buffer, BUFFER_SIZE); /* function was changed
             to support extra arguments (int control) */
-            if(exec_command(args1, 0, numArgs))
+            if(exec_command(args1, 0, numArgs, children))
                 break;
             else 
                 continue;
@@ -297,7 +320,7 @@ int main (int argc, char** argv) {
             read(fshell, buffer1, BUFFER_SIZE);
             int numArgs = readLineArguments(1,args, MAXARGS + 1, buffer1, BUFFER_SIZE);
             if (numArgs == 3)  {/* make sure it has client's pipeName */
-                if(exec_command(args,1,numArgs)) /* returned 1 then must leave while */
+                if(exec_command(args,1,numArgs, children)) /* returned 1 then must leave while */
                     break;
                 else
                     continue; /* returned 0 then must go to the start of while*/

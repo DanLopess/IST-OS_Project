@@ -1,13 +1,9 @@
 /*
-// Projeto SO - exercise 3, version 1
+// Projeto SO - exercise 3
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
 
-NOTES:
-- block signals on fork
-- block signals on handler 
-- handler deals with all sigchild (while waitpid....)
-- test everyhting for eintr
-- control number of childs and signals
+Authors: Daniel Lopes & Nuno Ramos
+
 */
 
 #include "../lib/commandlinereader.h"
@@ -36,58 +32,77 @@ NOTES:
 
 int fshell;
 int MAXCHILDREN = -1;
-int runningChildren = 0;
+int runningChildren = 0; 
+int treatedSignals = 0; /* number of handled signals */
 vector_t *children;
 
-void handler(int sig) {
-    while(1) {
-        /* devera funcionar qnd recebemos signals a mais e signal a menos */
-        if (runningChildren > 0) {
-            child_t *child = malloc(sizeof(child_t));
+/* If this flag is nonzero, don’t handle the signal right away. */
+volatile sig_atomic_t signal_pending;
 
-            if ((child->pid = waitpid(-1, &(child->status), WNOHANG)) < 0) {
-                perror("Failed to wait for child.");
-                exit(EXIT_FAILURE);
-            }
-            if (child->pid < 0)
+/* This is nonzero if a signal arrived and was not handled. */
+volatile sig_atomic_t defer_signal;
+
+
+void handler(int sig) {
+    if (defer_signal) /* if signals are blocked */
+        signal_pending = sig;
+    else {
+        while (1) /* get all children that finished */
+        {   
+            if (runningChildren > 0 && treatedSignals < vector_getSize(children))
             {
-                if (errno == EINTR)
+                child_t *child = malloc(sizeof(child_t));
+
+                if ((child->pid = waitpid(-1, &(child->status), WNOHANG)) <= 0)
                 {
-                    /* Error code means wait for child was interrupted,
+                    if(child->pid == 0)  /* returns 0 if no more children that have finished */
+                        break;
+                    
+                    if (errno == EINTR)
+                    {
+                        /* Error code means wait for child was interrupted,
                     therefore must be resumed */
-                    free(child);
-                    continue;
-                }
-                if(errno == ECHILD){
-                    /* Error code means The process specified by pid 
+                        free(child);
+                        continue;
+                    }
+                    if (errno == ECHILD)
+                    {
+                        /* Error code means The process specified by pid 
                     does not exist or is not a child of the calling process,
                     therefore must break */
-                    free(child);
-                    break;
+                        free(child);
+                        break;
+                    }
+                    else
+                    {
+                        perror("Unexpected error while waiting for child.");
+                        exit(EXIT_FAILURE);
+                    }
                 }
-                else
+                if (TIMER_READ(child->time2) < 0)
                 {
-                    perror("Unexpected error while waiting for child.");
+                    perror("Failed to obtain time.");
                     exit(EXIT_FAILURE);
                 }
-            }
-            runningChildren--;
-            if (TIMER_READ(child->time2) < 0) {
-                perror("Failed to obtain time.");
-                exit(EXIT_FAILURE);
-            }
 
-            for (int i = 0; i < vector_getSize(children); i++) {
-                child_t *childTemp = vector_at(children, i);
-                if (childTemp->pid == child->pid) {
-                    childTemp->status = child->status;
-                    childTemp->time2 = child->time2;
-                    break;
+                for (int i = 0; i < vector_getSize(children); i++)
+                {
+                    child_t *childTemp = vector_at(children, i);
+                    if (childTemp->pid == child->pid)
+                    {
+                        childTemp->status = child->status;
+                        childTemp->time2 = child->time2;
+                        break;
+                    }
                 }
+                free(child);
+                runningChildren--;
+                treatedSignals++;
             }
-            free(child);
-            break;
-        }    
+            else {
+                break;
+            }
+        }
     }
 }
 
@@ -129,12 +144,13 @@ int waitForInput(fd_set *fdset) {
 
     selected = select(max, fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
 
-    if (selected == -1)
-    {
-        if(errno == EINTR)
-            return 0;
-        else 
+    if (selected == -1) {
+        if(errno != EINTR) {
+            perror("");
             exit(EXIT_FAILURE);
+        }
+        else 
+            return 0; /* 0  means continue on while in main */
     }
     return 1;
 }
@@ -142,21 +158,15 @@ int waitForInput(fd_set *fdset) {
 void initiateShellPipe() {
     unlink(PIPENAME);
 
-    while (mkfifo(PIPENAME, 0777) < 0)
-    {
-        if(errno == EINTR)
-            continue;
-        else{
+    while (mkfifo(PIPENAME, 0777) < 0) {
+        if(errno != EINTR) {
             perror("Failed to create pipe");
             exit(EXIT_FAILURE); /* tries to make a new pipe */
         }
     }
 
-    while ((fshell = open(PIPENAME, O_RDWR)) < 0)
-    {
-        if(errno == EINTR)
-            continue;
-        else {
+    while ((fshell = open(PIPENAME, O_RDWR)) < 0) {
+        if(errno == EINTR) {
             perror("Failed to open pipe");
             exit(EXIT_FAILURE);
         }
@@ -198,44 +208,41 @@ void finishUp(){
     }
     vector_free(children);
 
-    close(fshell);
+    while (close(fshell) < 0) {
+        if (errno != EINTR) { 
+            perror("Failed to close pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
     unlink(PIPENAME);
 }
 
 /* returns 1 if break while, 0 if continue */
 int exec_command(char** args, int control, int numArgs) {
     /* control = 0, exec from stdin, control = 1, exec from pipe */
-    if (numArgs == -1)
-    {
+    if (numArgs == -1) {
         perror("Error reading instructions.");
         exit(EXIT_FAILURE);
     }
 
-    if (!control && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0))
-    {
+    if (!control && numArgs > 0 && (strcmp(args[0], COMMAND_EXIT) == 0)) {
         printf("CircuitRouter-AdvShell will exit.\n--\n");
-
         /* Waits for each child to finish  */
-        while (runningChildren > 0)
-        {
+        while (runningChildren > 0) {
             sleep(1); 
         }
-
         printChildren(children);
         printf("--\nCircuitRouter-AdvShell ended.\n");
         return 1;
 
     }
 
-    if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0)
-    {
-        if (numArgs < 2)
-        {
+    if (numArgs > 0 && strcmp(args[0], COMMAND_RUN) == 0) {
+        if (numArgs < 2) {
             printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
             return 0;
         }
-        while (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN) 
-        {
+        while (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN) {
             /* removed waitForChild because handler essentially does the same thing */
             sleep(1);
         }
@@ -245,38 +252,37 @@ int exec_command(char** args, int control, int numArgs) {
             perror("Error allocating memory");
             exit(EXIT_FAILURE);
         }
+
+        defer_signal++; /* block signals */
         child->pid = fork();
 
-        /* TODO block signals ....before fork, running children ++,  until vector_pushback*/
-
-        if (child->pid < 0)
-        {
+        if (child->pid < 0) {
             perror("Failed to create new process.");
             exit(EXIT_FAILURE);
         }
 
-        if (child->pid > 0)
-        {
-            if (TIMER_READ(child->time1) < 0)
-            {
+        if (child->pid > 0) {
+            if (TIMER_READ(child->time1) < 0) {
                 perror("Failed to obtain time.");
                 exit(EXIT_FAILURE);
             }
-            runningChildren++;
             vector_pushBack(children, child);
+            runningChildren++;
+
+            defer_signal--; /*unlock signals */
+            if (defer_signal == 0 && signal_pending != 0) /* now treat any signal that comes in*/
+                raise(signal_pending);
+
             printf("%s: background child started with PID %d.\n", COMMAND_RUN, child->pid);
             return 0;
         }
-        else
-        {
+        else {
             char seqsolver[] = "../CircuitRouter-SeqSolver/CircuitRouter-SeqSolver";
-            if (control)
-            {
+            if (control) {
                 char *newArgs[4] = {seqsolver, args[1], args[numArgs - 1], NULL}; /* if read from pipe */
-                execv(seqsolver, newArgs);
+                execv(seqsolver, newArgs); 
             }
-            else
-            {
+            else {
                 char *newArgs[3] = {seqsolver, args[1], NULL}; /* if read from stdin */
                 execv(seqsolver, newArgs);
             }
@@ -288,8 +294,7 @@ int exec_command(char** args, int control, int numArgs) {
     else if (numArgs == 0)
         return 0; /* No argument, ignores and asks again */
 
-    else
-    {                 /* command is not supported */
+    else {                 /* command is not supported */
         if (control) /* if input is from client, then send through pipe */
             sendNotSupported(args[numArgs - 1]);
         else /*  just prints to stdout */

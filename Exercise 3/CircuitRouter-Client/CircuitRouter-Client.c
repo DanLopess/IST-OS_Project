@@ -1,7 +1,12 @@
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
+
+// Note: all sys-calls are not being validated for EINTR because
+// if interrupted, it doesnt matter if they fail
+// the program will close regardless 
 */
+
 
 #include "../lib/commandlinereader.h"
 #include "../lib/vector.h"
@@ -64,7 +69,7 @@ int main(int argc, char const *argv[]) {
 		perror("Error creating own pipe");
 		exit(EXIT_FAILURE);
 	}
-	while ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
+	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
 		perror("Failed to open shell pipe");
 		exit(EXIT_FAILURE); /* error opening pipe */
 	}
@@ -76,10 +81,10 @@ int main(int argc, char const *argv[]) {
 		char message[BUFFSIZE]; /* stores response from advshell */
 		int sentCommand = 0;
 
-	if ((fclient = open(pipeName, O_RDWR)) < 0) {
-		perror("Failed to open own pipe");
-		exit(EXIT_FAILURE); /* error opening pipe */
-	}
+		if ((fclient = open(pipeName, O_RDWR)) < 0) {
+			perror("Failed to open own pipe");
+			exit(EXIT_FAILURE); /* error opening pipe */
+		}
 		if (fgets(command, BUFFSIZE, stdin) != NULL) {  /* read command and send to advshell*/
 			strtok(command, "\n"); /*removes \n from string*/
 			strcat(command, " ");  /* makes it so that the first argument in the command is the return pipe*/
@@ -98,7 +103,10 @@ int main(int argc, char const *argv[]) {
 			}
 			printf("%s\n", message);
 		}
-		close(fclient);
+		if(close(fclient) < 0) {
+			perror("Failed to close own pipe");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	finishUp();

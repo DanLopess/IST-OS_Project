@@ -5,6 +5,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 /**
 Reads up to 'vectorSize' space-separated arguments from the standard input
@@ -37,8 +38,9 @@ int readLineArguments(int control, char **argVector, int vectorSize, char *buffe
      return 0;
   
   if(!control) { /* reads from stdin, else reads from given buffer*/
-    if (fgets(buffer, bufferSize, stdin) == NULL) {
-      return -1;
+    while (fgets(buffer, bufferSize, stdin) == NULL) {
+      if (errno != EINTR)
+        return -1;
     }
   }
 

@@ -11,7 +11,7 @@ typedef struct {
     TIMER_T time1, time2;
 } child_t;
 
-void waitForChild();
+void handler();
 void printChildren();
 int waitForInput(fd_set* fdset);
 void initiateShellPipe();

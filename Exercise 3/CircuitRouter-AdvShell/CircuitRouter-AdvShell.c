@@ -1,6 +1,13 @@
 /*
 // Projeto SO - exercise 3, version 1
 // Sistemas Operativos, DEI/IST/ULisboa 2018-19
+
+NOTES:
+- block signals on fork
+- block signals on handler 
+- handler deals with all sigchild (while waitpid....)
+- test everyhting for eintr
+- control number of childs and signals
 */
 
 #include "../lib/commandlinereader.h"
@@ -32,43 +39,55 @@ int MAXCHILDREN = -1;
 int runningChildren = 0;
 vector_t *children;
 
-void waitForChild() {
-    while (1) {
-        int i;
-        child_t *child = malloc(sizeof(child_t));
-        if (child == NULL)
-        {
-            perror("Error allocating memory");
-            exit(EXIT_FAILURE);
-        }
-        child->pid = wait(&(child->status));
-        if (child->pid < 0)
-        {
-            if (errno == EINTR)
-            {
-                /* Error code means wait for child was interrupted,
-				therefore must be resumed */
-                free(child);
-                continue;
-            }
-            if(errno == ECHILD){
-                break;
-            }
-            else
-            {
-                perror("Unexpected error while waiting for child.");
+void handler(int sig) {
+    while(1) {
+        /* devera funcionar qnd recebemos signals a mais e signal a menos */
+        if (runningChildren > 0) {
+            child_t *child = malloc(sizeof(child_t));
+
+            if ((child->pid = waitpid(-1, &(child->status), WNOHANG)) < 0) {
+                perror("Failed to wait for child.");
                 exit(EXIT_FAILURE);
             }
-        }
-        for (i = 0; i < vector_getSize(children); i++) {
-            child_t *childTemp = vector_at(children, i);
-            if (childTemp->pid == child->pid)
+            if (child->pid < 0)
             {
-                childTemp->status = child->status;
+                if (errno == EINTR)
+                {
+                    /* Error code means wait for child was interrupted,
+                    therefore must be resumed */
+                    free(child);
+                    continue;
+                }
+                if(errno == ECHILD){
+                    /* Error code means The process specified by pid 
+                    does not exist or is not a child of the calling process,
+                    therefore must break */
+                    free(child);
+                    break;
+                }
+                else
+                {
+                    perror("Unexpected error while waiting for child.");
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
+            runningChildren--;
+            if (TIMER_READ(child->time2) < 0) {
+                perror("Failed to obtain time.");
+                exit(EXIT_FAILURE);
+            }
 
-        return;
+            for (int i = 0; i < vector_getSize(children); i++) {
+                child_t *childTemp = vector_at(children, i);
+                if (childTemp->pid == child->pid) {
+                    childTemp->status = child->status;
+                    childTemp->time2 = child->time2;
+                    break;
+                }
+            }
+            free(child);
+            break;
+        }    
     }
 }
 
@@ -110,9 +129,12 @@ int waitForInput(fd_set *fdset) {
 
     selected = select(max, fdset, NULL, NULL, NULL); /* waits for either the pipe or stdin */
 
-    if (selected == -1 || selected == 0)
+    if (selected == -1)
     {
-        return 0;
+        if(errno == EINTR)
+            return 0;
+        else 
+            exit(EXIT_FAILURE);
     }
     return 1;
 }
@@ -120,16 +142,24 @@ int waitForInput(fd_set *fdset) {
 void initiateShellPipe() {
     unlink(PIPENAME);
 
-    if (mkfifo(PIPENAME, 0777) < 0)
+    while (mkfifo(PIPENAME, 0777) < 0)
     {
-        perror("Failed to create pipe");
-        exit(EXIT_FAILURE); /* tries to make a new pipe */
+        if(errno == EINTR)
+            continue;
+        else{
+            perror("Failed to create pipe");
+            exit(EXIT_FAILURE); /* tries to make a new pipe */
+        }
     }
 
-    if ((fshell = open(PIPENAME, O_RDWR)) < 0)
+    while ((fshell = open(PIPENAME, O_RDWR)) < 0)
     {
-        perror("Failed to open pipe");
-        exit(EXIT_FAILURE);
+        if(errno == EINTR)
+            continue;
+        else {
+            perror("Failed to open pipe");
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
@@ -137,15 +167,28 @@ void sendNotSupported(char* pipeName) {
     int fclient;
 	char message[BUFFER_SIZE];
 
-    if ((fclient = open(pipeName, O_RDWR)) < 0) {
-        perror ("Failed to open pipe");
+    while ((fclient = open(pipeName, O_RDWR)) < 0) {
+        if(errno != EINTR) {
+            perror ("Failed to open pipe");
+            exit(EXIT_FAILURE);
+        }
     }
+
     strcpy(message, "Command not supported.");
-    if (write(fclient, message, BUFFER_SIZE) < 0) {
-        perror("Failed to write to pipe");
-        exit(EXIT_FAILURE);
+
+    while (write(fclient, message, BUFFER_SIZE) < 0) {
+        if (errno != EINTR) {
+            perror("Failed to write to pipe");
+            exit(EXIT_FAILURE);
+        }
     }
-    close(fclient);
+    
+    while(close(fclient) < 0) {
+        if(errno != EINTR) {
+            perror("Failed to close pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 void finishUp(){
@@ -172,11 +215,10 @@ int exec_command(char** args, int control, int numArgs) {
     {
         printf("CircuitRouter-AdvShell will exit.\n--\n");
 
-        /* Espera pela terminacao de cada filho */
+        /* Waits for each child to finish  */
         while (runningChildren > 0)
         {
-            waitForChild(children);
-            runningChildren--;
+            sleep(1); 
         }
 
         printChildren(children);
@@ -192,10 +234,10 @@ int exec_command(char** args, int control, int numArgs) {
             printf("%s: invalid syntax. Try again.\n", COMMAND_RUN);
             return 0;
         }
-        if (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN)
+        while (MAXCHILDREN != -1 && runningChildren >= MAXCHILDREN) 
         {
-            waitForChild(children);
-            runningChildren--;
+            /* removed waitForChild because handler essentially does the same thing */
+            sleep(1);
         }
 
         child_t *child = malloc(sizeof(child_t));
@@ -204,6 +246,9 @@ int exec_command(char** args, int control, int numArgs) {
             exit(EXIT_FAILURE);
         }
         child->pid = fork();
+
+        /* TODO block signals ....before fork, running children ++,  until vector_pushback*/
+
         if (child->pid < 0)
         {
             perror("Failed to create new process.");
@@ -253,34 +298,8 @@ int exec_command(char** args, int control, int numArgs) {
     return 0;
 }
 
-void handler(int sig) {
-    pid_t pid;
-
-    child_t *child = malloc(sizeof(child_t));
-
-    if ((pid = waitpid(-1, &(child->status), WNOHANG)) < 0) {
-        perror("Failed to wait for child.");
-        exit(EXIT_FAILURE);
-    }
-    child->pid = pid;
-    if (TIMER_READ(child->time2) < 0) {
-        perror("Failed to obtain time.");
-        exit(EXIT_FAILURE);
-    }
-
-    for (int i = 0; i < vector_getSize(children); i++) {
-        child_t *childTemp = vector_at(children, i);
-        if (childTemp->pid == child->pid) {
-            childTemp->status = child->status;
-            childTemp->time2 = child->time2;
-            break;
-        }
-    }
-    free(child);
-}
-
 int main (int argc, char** argv) {
-    signal(SIGCHLD, handler);
+    signal(SIGCHLD, handler); /* error will never occur so no checking needed */
     char *args[MAXARGS + 1], *args1[MAXARGS+1];
     char buffer[BUFFER_SIZE], buffer1[BUFFER_SIZE];
     fd_set fdset;
@@ -313,7 +332,12 @@ int main (int argc, char** argv) {
                 continue;
         }
         if (FD_ISSET(fshell, &fdset)) {
-            read(fshell, buffer1, BUFFER_SIZE);
+            while(read(fshell, buffer1, BUFFER_SIZE) < 0) {
+                if(errno != EINTR) {
+                    perror("Failed to read.");
+                    exit(EXIT_FAILURE);
+                }
+            }
             int numArgs = readLineArguments(1,args, MAXARGS + 1, buffer1, BUFFER_SIZE);
             if (numArgs == 3)  {/* make sure it has client's pipeName */
                 if(exec_command(args,1,numArgs)) /* returned 1 then must leave while */

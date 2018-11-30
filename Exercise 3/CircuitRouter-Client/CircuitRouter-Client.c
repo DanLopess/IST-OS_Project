@@ -64,7 +64,7 @@ int main(int argc, char const *argv[]) {
 		perror("Error creating own pipe");
 		exit(EXIT_FAILURE);
 	}
-	if ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
+	while ((fshell = open(shellPipeName, O_WRONLY)) < 0) {
 		perror("Failed to open shell pipe");
 		exit(EXIT_FAILURE); /* error opening pipe */
 	}

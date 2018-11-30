@@ -11,12 +11,12 @@ typedef struct {
     TIMER_T time1, time2;
 } child_t;
 
-void waitForChild(vector_t *children);
-void printChildren(vector_t *children);
+void waitForChild();
+void printChildren();
 int waitForInput(fd_set* fdset);
 void initiateShellPipe();
 void sendNotSupported(char* pipeName);
-void finishUp(vector_t *children);
-int exec_command(char **args, int control, int numArgs, vector_t *children);
+void finishUp();
+int exec_command(char **args, int control, int numArgs);
 
 #endif /* CIRCUITROUTER_SHELL_H */

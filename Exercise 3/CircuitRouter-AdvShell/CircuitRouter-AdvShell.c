@@ -32,7 +32,7 @@ int MAXCHILDREN = -1;
 int runningChildren = 0;
 vector_t *children;
 
-void waitForChild(vector_t *children) {
+void waitForChild() {
     while (1) {
         int i;
         child_t *child = malloc(sizeof(child_t));
@@ -72,7 +72,7 @@ void waitForChild(vector_t *children) {
     }
 }
 
-void printChildren(vector_t *children) {
+void printChildren() {
     for (int i = 0; i < vector_getSize(children); ++i) {
         child_t *child = vector_at(children, i);
         int status = child->status;
@@ -148,7 +148,7 @@ void sendNotSupported(char* pipeName) {
     close(fclient);
 }
 
-void finishUp(vector_t *children){
+void finishUp(){
     for (int i = 0; i < vector_getSize(children); i++)
     {
         free(vector_at(children, i));
@@ -160,7 +160,7 @@ void finishUp(vector_t *children){
 }
 
 /* returns 1 if break while, 0 if continue */
-int exec_command(char** args, int control, int numArgs, vector_t *children) {
+int exec_command(char** args, int control, int numArgs) {
     /* control = 0, exec from stdin, control = 1, exec from pipe */
     if (numArgs == -1)
     {
@@ -272,12 +272,11 @@ void handler(int sig) {
         child_t *childTemp = vector_at(children, i);
         if (childTemp->pid == child->pid) {
             childTemp->status = child->status;
-			childTemp->time1 = child->time1;
             childTemp->time2 = child->time2;
             break;
         }
     }
-
+    free(child);
 }
 
 int main (int argc, char** argv) {
@@ -308,7 +307,7 @@ int main (int argc, char** argv) {
             int numArgs;
             numArgs = readLineArguments(0,args1, MAXARGS+1, buffer, BUFFER_SIZE); /* function was changed
             to support extra arguments (int control) */
-            if(exec_command(args1, 0, numArgs, children))
+            if(exec_command(args1, 0, numArgs))
                 break;
             else
                 continue;
@@ -317,7 +316,7 @@ int main (int argc, char** argv) {
             read(fshell, buffer1, BUFFER_SIZE);
             int numArgs = readLineArguments(1,args, MAXARGS + 1, buffer1, BUFFER_SIZE);
             if (numArgs == 3)  {/* make sure it has client's pipeName */
-                if(exec_command(args,1,numArgs, children)) /* returned 1 then must leave while */
+                if(exec_command(args,1,numArgs)) /* returned 1 then must leave while */
                     break;
                 else
                     continue; /* returned 0 then must go to the start of while*/
